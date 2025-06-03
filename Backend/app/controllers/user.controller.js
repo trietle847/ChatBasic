@@ -36,6 +36,22 @@ exports.getUserByUsername = async (req, res, next) => {
   }
 };
 
+exports.getMe = async (req, res, next) => {
+  try {
+    const userService = new UserService(MongoDB.client);
+    const username = req.user.tendangnhap;
+    const result = await userService.getUserByToken(username);
+
+    if (result)
+      return res.send({
+        message: "Thông tin người dùng",
+        user: result,
+      });
+  } catch (error) {
+    return next(new ApiError(500, ` Lỗi khi lấy người dùng ${error}`));
+  }
+};
+
 exports.login = async (req, res, next) => {
   try {
     const { tendangnhap, password } = req.body;
@@ -72,8 +88,8 @@ exports.login = async (req, res, next) => {
         hoten: user.hoten,
         email: user.email,
         tendangnhap: user.tendangnhap,
-      }
-    })
+      },
+    });
   } catch (error) {
     return next(new ApiError(500, ` Lỗi đăng nhập ${error.message}`));
   }
@@ -86,14 +102,14 @@ exports.update = async (req, res, next) => {
     const id = req.user.userId;
     const updateData = req.body;
 
-    const result = await userService.updateUser(id,updateData);
-    console.log(updateData)
-    console.log(id)
+    const result = await userService.updateUser(id, updateData);
+    console.log(updateData);
+    console.log(id);
 
     return res.send({
       message: "Cập nhật thành công",
       result,
-    })
+    });
   } catch (error) {
     return next(new ApiError(500, `Lỗi khi sửa người dùng: ${error.message}`));
   }

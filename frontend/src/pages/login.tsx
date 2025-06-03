@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import userService from "@/services/user.service";
 import type { LoginData } from "@/services/user.service";
 
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 export default function LoginForm() {
   const [tendangnhap, setTendangnhap] = useState("");
   const [password, setPassword] = useState("");
-//   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     if (!tendangnhap || !password) {
@@ -24,7 +24,7 @@ export default function LoginForm() {
       const res = await userService.login(loginData);
       console.log("token", res.token);
       alert("Đăng nhập thành công");
-    //   navigate("/");
+      navigate("/");
     } catch (error: unknown) {
         const err = error as { response?: { data?: { message?: string } } };
         alert("Lỗi đăng nhập: " + (err.response?.data?.message || "Không xác định"));

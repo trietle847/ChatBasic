@@ -13,7 +13,7 @@ function authMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
-    req.user = decoded; // gắn thông tin người dùng
+    req.user = decoded; 
     next();
   } catch (err) {
     console.error("JWT Verify Error:", err.message);

@@ -1,6 +1,7 @@
 const ApiError = require("../api-error");
 const messageService = require("../services/messages.service");
 const conversationService = require("../services/conversation.service");
+const socketUtil = require("../utils/socket.util");
 
 exports.sendMessage = async (req, res, next) => {
   try {
@@ -14,6 +15,9 @@ exports.sendMessage = async (req, res, next) => {
     });
 
     await conversationService.updateLastMessage(conversationId, Message._id);
+
+    const io = socketUtil.getIO();
+    io.to(conversationId).emit("receive_message",Message)
 
     return res.send({
       message: "Tạo tin nhắn mới thành công",
@@ -34,6 +38,6 @@ exports.getMessages = async (req, res, next) => {
       messages,
     });
   } catch (error) {
-    new ApiError(500, `Lỗi khi lấy tin nhắn ${error.message}`);
+    return next(new ApiError(500, `Lỗi khi lấy tin nhắn ${error.message}`))
   }
 };

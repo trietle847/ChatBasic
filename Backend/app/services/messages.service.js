@@ -7,15 +7,15 @@ class MessageService {
       senderId,
       content,
     );
+    
 
     return await message.save();
   }
 
   async getMessages(conversationId) {
-    return await Message.find({ conversationId }).populate(
-      "sender",
-      "hoten email"
-    );
+    return await Message.find({ conversationId })
+      .sort({ createdAt: 1 })
+      .populate("senderId", "hoten email");
   }
 }
 

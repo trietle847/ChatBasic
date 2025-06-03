@@ -12,14 +12,25 @@ export interface RegisterData {
   email: string,
   sdt: string,
 }
+
 const userService = {
   login: async (data: LoginData) => {
-    const response = await createAPI.post("user/login", data);
+    const response = await createAPI.post("/user/login", data);
+
+    const token = response.data.token;
+    localStorage.setItem("token", token);
+
     return response.data; 
   },
 
   register: async(data: RegisterData) => {
     const response = await createAPI.post("/user", data);
+    return response.data;
+  },
+
+  getMe: async() => {
+    // const token = localStorage.getItem("token");
+    const response = await createAPI.get("/user/me");
     return response.data;
   }
 }

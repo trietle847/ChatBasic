@@ -7,6 +7,7 @@ const router = express.Router();
 router
   .route("/")
   .post(authMiddleware,messageController.sendMessage)
-  .get(messageController.getMessages);
+router.route("/get")
+  .post(messageController.getMessages);
 
 module.exports = router;

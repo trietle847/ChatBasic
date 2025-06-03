@@ -26,7 +26,7 @@ exports.getUserConversation = async (req, res, next) => {
     const conversations = await conversationService.getUserCoversation(userId);
 
     return res.send({
-      message: "Danh sach cac cuoc tro chuyen",
+      message: "Danh sách các cuộc trò chuyện",
       conversations,
     });
   } catch (error) {

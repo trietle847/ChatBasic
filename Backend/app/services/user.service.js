@@ -28,7 +28,7 @@ class userService {
 
     const userObj = savedUser.toObject();
     delete userObj.password;
-    
+
     return userObj;
   }
 
@@ -44,6 +44,21 @@ class userService {
       }
     } catch (error) {
       throw new Error("lỗi khi tìm người dùng", error);
+    }
+  }
+
+  async getUserByToken(username) {
+    try {
+      const existUser = await User.findOne({
+        tendangnhap: username,
+      });
+
+      if (existUser) return existUser;
+      else {
+        throw new Error("Người dùng không tồn tại");
+      }
+    } catch (error) {
+      throw new Error("lỗi khi tìm người dùng", error.message);
     }
   }
 

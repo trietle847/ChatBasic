@@ -8,9 +8,13 @@ router.route("/")
     .post(user.create)
     .put(authMiddleware,user.update)
 
-router.route("/:tendangnhap")
-    .get(user.getUserByUsername)
+// router.route("/:tendangnhap")
+//     .get(user.getUserByUsername)
 
 router.route("/login").
     post(user.login);
+
+router.route("/me")
+    .get(authMiddleware,user.getMe)
+
 module.exports = router;
