@@ -36,6 +36,21 @@ exports.getUserByUsername = async (req, res, next) => {
   }
 };
 
+exports.getUserById = async (req, res, next) => {
+  try {
+    const userService = new UserService(MongoDB.client);
+    const result = await userService.getUserById(req.params.id);
+
+    if (result)
+      return res.send({
+        message: "Thông tin người dùng",
+        user: result,
+      });
+  } catch (error) {
+    return next(new ApiError(500, ` Lỗi khi lấy người dùng`, error));
+  }
+};
+
 exports.getMe = async (req, res, next) => {
   try {
     const userService = new UserService(MongoDB.client);

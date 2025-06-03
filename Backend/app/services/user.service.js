@@ -47,6 +47,21 @@ class userService {
     }
   }
 
+  async getUserById(id) {
+    try {
+      const existUser = await User.findOne({
+        _id: new ObjectId(id),
+      });
+
+      if (existUser) return existUser;
+      else {
+        throw new Error("Người dùng không tồn tại");
+      }
+    } catch (error) {
+      throw new Error("lỗi khi tìm người dùng", error);
+    }
+  }
+
   async getUserByToken(username) {
     try {
       const existUser = await User.findOne({

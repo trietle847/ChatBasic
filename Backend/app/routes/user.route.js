@@ -8,8 +8,8 @@ router.route("/")
     .post(user.create)
     .put(authMiddleware,user.update)
 
-// router.route("/:tendangnhap")
-//     .get(user.getUserByUsername)
+router.route("/find/:id")
+    .get(user.getUserById)
 
 router.route("/login").
     post(user.login);
