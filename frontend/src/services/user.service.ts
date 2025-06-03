@@ -32,6 +32,11 @@ const userService = {
     // const token = localStorage.getItem("token");
     const response = await createAPI.get("/user/me");
     return response.data;
+  },
+
+  findUserById: async(id: string) => {
+    const response = await createAPI.get(`/user/find/${id}`)
+    return response.data;
   }
 }
 
