@@ -21,18 +21,17 @@ exports.create = async (req, res, next) => {
   }
 };
 
-exports.getUserByUsername = async (req, res, next) => {
+exports.searchUserByUsername = async (req, res, next) => {
   try {
     const userService = new UserService(MongoDB.client);
-    const result = await userService.getUserByUsername(req.body.tendangnhap);
-
+    const result = await userService.getUserByUsername(req.body.hoten);
     if (result)
       return res.send({
         message: "Thông tin người dùng",
         user: result,
       });
   } catch (error) {
-    return next(new ApiError(500, ` Lỗi khi lấy người dùng`, error));
+    return next(new ApiError(500, ` Lỗi khi lấy người dùng ${error}`));
   }
 };
 
@@ -127,5 +126,21 @@ exports.update = async (req, res, next) => {
     });
   } catch (error) {
     return next(new ApiError(500, `Lỗi khi sửa người dùng: ${error.message}`));
+  }
+};
+
+exports.searchUserByPhone= async (req, res, next) => {
+  try {
+    const userService = new UserService(MongoDB.client);
+    const result = await userService.seachUserByPhone(req.body.phone);
+
+    if (result)
+      return res.send({
+    message:" Thông tin người dùng",
+    user: result
+  })
+  } catch (error) {
+    return next(new ApiError(500, ` Lỗi khi lấy người dùng`, error));
+
   }
 };

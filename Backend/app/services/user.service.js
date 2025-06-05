@@ -4,16 +4,8 @@ const brcypt = require("bcrypt");
 
 class userService {
   async createUser(payload) {
-    // const exitUser = await User.findOne({
-    //   $or: [{ email: User.email }, { tendangnhap: User.tendangnhap }],
-    // });
-
-    // if (exitUser) {
-    //   throw new Error("Người dùng đã tồn tại.");
-    // }
-
     const existing = await User.findOne({
-      $or: [{ email: payload.email }, { tendangnhap: payload.tendangnhap }],
+      $or: [{ email: payload.email }, { tendangnhap: payload.tendangnhap }, {sdt: payload.sdt}],
     });
 
     if (existing) {
@@ -32,18 +24,20 @@ class userService {
     return userObj;
   }
 
-  async getUserByUsername(username) {
+  async getUserByUsername(keyword) {
     try {
-      const existUser = await User.findOne({
-        tendangnhap: username,
-      });
+      const words = keyword.trim().split(/\s+/);
 
-      if (existUser) return existUser;
-      else {
-        throw new Error("Người dùng không tồn tại");
-      }
+      const regexConditions = words.map((word) => ({
+        hoten: { $regex: word, $options: "i" },
+      }));
+
+      const users = await User.find({ $and: regexConditions });
+
+      if (users.length > 0) return users;
+      else throw new Error("Không tìm thấy người dùng phù hợp");
     } catch (error) {
-      throw new Error("lỗi khi tìm người dùng", error);
+      throw new Error("Lỗi khi tìm người dùng: " + error.message);
     }
   }
 
@@ -91,6 +85,21 @@ class userService {
     } catch (error) {
       console.error("Chi tiết lỗi khi cập nhật:", error);
       throw new Error("Lỗi khi cập nhật: " + error.message);
+    }
+  }
+
+  async seachUserByPhone(phone) {
+    try {
+      const existUser = await User.findOne({
+        sdt: phone,
+      });
+
+      if (existUser) return existUser;
+      else {
+        throw new Error("Người dùng không tồn tại");
+      }
+    } catch (error) {
+      throw new Error("lỗi khi tìm người dùng", error);
     }
   }
 }

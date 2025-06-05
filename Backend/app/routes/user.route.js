@@ -11,6 +11,12 @@ router.route("/")
 router.route("/find/:id")
     .get(user.getUserById)
 
+router.route("/search/phone")
+    .post(user.searchUserByPhone);
+
+router.route("/search/name")
+    .post(user.searchUserByUsername);
+
 router.route("/login").
     post(user.login);
 
