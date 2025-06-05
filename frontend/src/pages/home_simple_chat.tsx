@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPhone, faVideo, faGear } from "@fortawesome/free-solid-svg-icons";
+import { faPhone, faVideo, faGear, faUserPlus, faSearch} from "@fortawesome/free-solid-svg-icons";
 
 
 import { useState, useEffect, useRef } from "react";
@@ -164,6 +164,25 @@ const Home = () => {
       {/* Sidebar */}
       <div className="w-1/4 bg-white p-4 border-r overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Chats</h2>
+        <div className="flex items-center justify-between mb-4 space-x-2">
+          <div className="flex items-center flex-1 bg-gray-100 rounded-md px-2">
+            <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
+            <Input
+              id="searchFriend"
+              type="text"
+              placeholder="Tìm kiếm"
+              className="border-none shadow-none focus-visible:ring-0 focus:outline-none bg-transparent ml-2"
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-blue-600 hover:bg-blue-100 transition"
+          >
+            <FontAwesomeIcon icon={faUserPlus} />
+          </Button>
+        </div>
+
         <div className="space-y-3">
           {conversations.map((conv) => (
             <Card
