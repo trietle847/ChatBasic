@@ -10,6 +10,7 @@ require("dotenv").config();
 const userRouter = require("./app/routes/user.route");
 const conversationRouter = require("./app/routes/conversation.route")
 const messageRouter = require("./app/routes/message.route")
+const friendRouter = require("./app/routes/friend.route")
 
 app.use(cors());
 app.use(express.json());
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use("/user",userRouter);
 app.use("/conversation",conversationRouter)
 app.use("/message",messageRouter)
+app.use("/friend",friendRouter)
 
 app.use((req, res, next) => {
     return next(new ApiError(404, "Resource not found"))
