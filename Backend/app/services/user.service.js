@@ -5,7 +5,11 @@ const brcypt = require("bcrypt");
 class userService {
   async createUser(payload) {
     const existing = await User.findOne({
-      $or: [{ email: payload.email }, { tendangnhap: payload.tendangnhap }, {sdt: payload.sdt}],
+      $or: [
+        { email: payload.email },
+        { tendangnhap: payload.tendangnhap },
+        { sdt: payload.sdt },
+      ],
     });
 
     if (existing) {
@@ -24,7 +28,7 @@ class userService {
     return userObj;
   }
 
-  async getUserByUsername(keyword) {
+  async getUserByName(keyword) {
     try {
       const words = keyword.trim().split(/\s+/);
 
@@ -45,6 +49,21 @@ class userService {
     try {
       const existUser = await User.findOne({
         _id: new ObjectId(id),
+      });
+
+      if (existUser) return existUser;
+      else {
+        throw new Error("Người dùng không tồn tại");
+      }
+    } catch (error) {
+      throw new Error("lỗi khi tìm người dùng", error);
+    }
+  }
+
+  async getUserByUsername(username) {
+    try {
+      const existUser = await User.findOne({
+        tendangnhap: username,
       });
 
       if (existUser) return existUser;
