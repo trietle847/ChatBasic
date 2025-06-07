@@ -32,7 +32,7 @@ class friendService {
     // từ chối lời mời kết bạn
     async rejectRequest(idRequest, currentUserId) {
         const result = await Friend.findById(idRequest);
-        if (!result || result.user2 !== currentUserId){
+        if (!result || result.user2.toString() !== currentUserId){
             return null;
         }
         // xóa bỏ lời mời đó

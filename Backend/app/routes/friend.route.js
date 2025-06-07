@@ -8,10 +8,10 @@ router.route("/request")
     .post(authMiddleware, friendController.sendRequest)
 
 router.route("/accept")
-    .post(authMiddleware,friendController.acceptRequest);
+    .put(authMiddleware,friendController.acceptRequest);
 
 router.route("/reject")
-    .post(authMiddleware, friendController.rejectRequest)
+    .delete(authMiddleware, friendController.rejectRequest)
 
 router.route("/myFriend")
     .get(authMiddleware,friendController.getFriendList)
