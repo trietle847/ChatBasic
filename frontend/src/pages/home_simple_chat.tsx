@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import  Sidebar  from "@/components/selfCreate/sidebar";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPhone, faVideo, faGear, faUserPlus, faSearch} from "@fortawesome/free-solid-svg-icons";
@@ -162,11 +163,12 @@ const Home = () => {
   return (
     <div className="flex h-screen w-screen bg-gray-100">
       {/* Sidebar */}
+      <Sidebar/>
       <div className="w-1/4 bg-white p-4 border-r overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Chats</h2>
         <div className="flex items-center justify-between mb-4 space-x-2">
           <div className="flex items-center flex-1 bg-gray-100 rounded-md px-2">
-            <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
+            <FontAwesomeIcon icon={faSearch} className="text-gray-500" />{" "}
             <Input
               id="searchFriend"
               type="text"
@@ -177,7 +179,7 @@ const Home = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="text-blue-600 hover:bg-blue-100 transition"
+            className="text-blue-600 hover:bg-blue-100 transition cursor-pointer"
           >
             <FontAwesomeIcon icon={faUserPlus} />
           </Button>
