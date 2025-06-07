@@ -9,7 +9,6 @@ function App() {
       <Route path="/" element={<HomePage/>} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterForm />} />
-      {/* Bạn có thể thêm các route khác tại đây */}
     </Routes>
   );
 }

@@ -47,7 +47,6 @@ export default function RegisterForm() {
       );
     }
 
-    alert(`Đăng ký với:\nHọ tên: ${name}\nEmail: ${email}`);
   };
 
   return (
