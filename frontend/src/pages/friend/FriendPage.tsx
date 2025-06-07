@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import FriendsList from "./FriendList";
+import RequestAddFriend from "./requestAddFriend"
 
 const FriendPage = () => {
   const [activeTab, setActiveTab] = useState("friends")
@@ -91,7 +92,8 @@ const FriendPage = () => {
 
       {/* hiển thị giao diện bên phải */}
       <div className="flex-1 p-6">
-        {activeTab === "friends" && <FriendsList/>}
+        {activeTab === "friends" && <FriendsList />}
+        {activeTab === "invites" && <RequestAddFriend />}
       </div>
     </div>
   );
