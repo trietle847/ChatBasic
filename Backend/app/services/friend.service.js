@@ -54,6 +54,14 @@ class friendService {
         console.log(myFriendIds)
         return myFriendIds;
     }
+    // lấy danh sách lời mời kết bạn
+    async getRequestAddFriend(currentUserId) {
+        const result =  await Friend.find({
+            user2: currentUserId,
+            status:"pending"
+        })
+        return result;
+    }
 }
 
 module.exports = new friendService()

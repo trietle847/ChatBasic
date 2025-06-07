@@ -16,4 +16,7 @@ router.route("/reject")
 router.route("/myFriend")
     .get(authMiddleware,friendController.getFriendList)
 
+router.route("/requestAddFriend")
+    .get(authMiddleware, friendController.getRequestAddFriend)
+
 module.exports = router

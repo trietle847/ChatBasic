@@ -81,3 +81,18 @@ exports.getFriendList = async (req, res, next) => {
         return next(new ApiError(500, error.message));
     }
 }
+
+exports.getRequestAddFriend = async (req, res, next) => {
+    try {
+        const result = await friendService.getRequestAddFriend(req.user.userId);
+        if (result.length === 0){
+            return next(new ApiError(400,"Chưa có lời mời kết bạn nào"))
+        }
+        return res.send({
+            message: "Danh sách lời mời kết bạn",
+            result
+        })
+    } catch (error) {
+        return next(new ApiError(500, error.message));
+    }
+}
