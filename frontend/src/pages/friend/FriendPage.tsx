@@ -3,6 +3,7 @@ import { useState } from "react";
 import Sidebar from "@/components/selfCreate/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import AddFriendModal from "@/components/selfCreate/FindvsAddFriend";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,6 +19,7 @@ import GroupList from "./GroupList"
 
 const FriendPage = () => {
   const [activeTab, setActiveTab] = useState("friends")
+  const [isModalOpen, setModalOpen] = useState(false);
 
   return (
     <div className="flex h-screen w-screen bg-gray-100">
@@ -42,6 +44,7 @@ const FriendPage = () => {
             variant="ghost"
             size="icon"
             className="text-blue-600 hover:bg-blue-100 transition"
+            onClick={() => setModalOpen(true)}
           >
             <FontAwesomeIcon icon={faUserPlus} />
           </Button>
@@ -53,6 +56,11 @@ const FriendPage = () => {
             <FontAwesomeIcon icon={faUsers} />
           </Button>
         </div>
+
+        <AddFriendModal
+          open={isModalOpen}
+          onClose={() => setModalOpen(false)}
+        />
 
         {/* tab */}
         <div className="flex flex-col space-y-2">
