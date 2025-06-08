@@ -32,6 +32,14 @@ class ConversationService {
     }).populate("members", "tendangnhap");
   }
 
+  // lấy các cuộc trò chuyện của nhóm
+  async getGroupConversation(userId) {
+    return await Conversation.find({
+      members: userId,
+      type: "group"
+    })
+  }
+
   // xóa thành viên
   async removeMember(conversationId, userId) {
     return await Conversation.findByIdAndUpdate(

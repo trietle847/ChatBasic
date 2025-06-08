@@ -8,6 +8,9 @@ router.route("/")
     .post(conversationController.createCoversation)
     .get(authMiddleware, conversationController.getUserConversation)
 
+router.route("/get/group")
+    .get(authMiddleware,conversationController.getGroupConversation)
+
 router.route("/addMember")
     .put(conversationController.addMember)
 

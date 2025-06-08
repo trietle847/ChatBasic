@@ -94,3 +94,19 @@ exports.deleteConversation = async (req, res, next) => {
     return next(new ApiError(500, `Lỗi ${error.message}`));
   }
 };
+
+exports.getGroupConversation = async (req, res, next) => {
+  try {
+    const result = await conversationService.getGroupConversation(req.user.userId);
+    if (result.length === 0) {
+      return next(new ApiError(400, "Không có tham gia nhóm nào"));
+    }
+
+    return res.send({
+      message: "Danh sách các nhóm là",
+      result
+    })
+  } catch (error) {
+    return next(new ApiError(500, `Lỗi ${error.message}`));
+  }
+}
