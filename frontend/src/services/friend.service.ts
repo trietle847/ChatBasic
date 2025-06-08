@@ -18,6 +18,10 @@ const FriendService = {
       data: { idRequest },
     });
     return response;
+  },
+  getgroups: async () => {
+    const response = await createAPI.get("/conversation/get/group")
+    return response.data;
   }
 };
 
