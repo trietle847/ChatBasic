@@ -37,6 +37,10 @@ const userService = {
   findUserById: async(id: string) => {
     const response = await createAPI.get(`/user/find/${id}`)
     return response.data;
+  },
+  searchUserByPhone: async(phone: string) => {
+    const response = await createAPI.post("/user/search/phone", {phone})
+    return response.data;
   }
 }
 
