@@ -38,7 +38,8 @@ class friendService {
         // xóa bỏ lời mời đó
         await Friend.findByIdAndDelete(idRequest);
         return {
-            message: "Đã từ chối lời mời"
+            message: "Đã từ chối lời mời",
+            user1: result.user1.toString(),
         }
     }
     // lấy danh sách bạn bè
