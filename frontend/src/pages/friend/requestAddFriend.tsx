@@ -32,16 +32,34 @@ const FriendsList = () => {
 
       const fullRequest = listRequest.map((r, index) => ({
         ...r, // từng phần tử trong listRequest
-        hotenUser1: result[index].user.hoten
-      }))
+        hotenUser1: result[index].user.hoten,
+      }));
 
-      setRequest(fullRequest)
+      setRequest(fullRequest);
       console.log(fullRequest);
-
     };
 
     fetchRequest();
   }, []);
+
+  const handleAcceptRequest = async (id: string) => {
+    try {
+      const result = await FriendService.acceptRequest(id);
+      console.log(result);
+      setRequest((req) => req.filter((r) => r._id !== id));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleRejectRequest = async (id: string) => {
+    try {
+      await FriendService.rejectRequest(id);
+      setRequest((req) => req.filter((r) => r._id !== id));
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Lời mời kết bạn</h2>
@@ -69,10 +87,15 @@ const FriendsList = () => {
                 <Button
                   size="sm"
                   className="bg-green-500 hover:bg-green-600 text-white"
+                  onClick={() => handleAcceptRequest(req._id)}
                 >
                   Chấp nhận
                 </Button>
-                <Button size="sm" variant="destructive">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleRejectRequest(req._id)}
+                >
                   Từ chối
                 </Button>
               </div>
