@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState  } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import userService from "@/services/user.service";
 import type { LoginData } from "@/services/user.service";
@@ -7,9 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
+import { useSocket } from "@/socket/socketContex";
+
 export default function LoginForm() {
   const [tendangnhap, setTendangnhap] = useState("");
   const [password, setPassword] = useState("");
+  const socket = useSocket();
+
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -22,13 +26,19 @@ export default function LoginForm() {
 
     try {
       const res = await userService.login(loginData);
-      console.log("token", res.token);
+
+      const userId = res.user._id;
+      // console.log("x", userId);
+      socket?.emit("register_user", userId);
+
       alert("Đăng nhập thành công");
       navigate("/");
     } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } } };
-        alert("Lỗi đăng nhập: " + (err.response?.data?.message || "Không xác định"));
-      }
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(
+        "Lỗi đăng nhập: " + (err.response?.data?.message || "Không xác định")
+      );
+    }
   };
 
   return (

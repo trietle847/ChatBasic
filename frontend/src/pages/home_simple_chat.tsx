@@ -8,9 +8,10 @@ import  Sidebar  from "@/components/selfCreate/sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPhone, faVideo, faGear, faUserPlus, faSearch} from "@fortawesome/free-solid-svg-icons";
 
-
 import { useState, useEffect, useRef } from "react";
-import { io, Socket } from "socket.io-client";
+
+import { useSocket } from "@/socket/socketContex";
+
 import userService from "@/services/user.service";
 import conversationService from "@/services/conversation.service";
 import messageService, {
@@ -39,8 +40,6 @@ interface Conversation {
   otherUser?: string;
 }
 
-const SOCKET_SERVER_URL = "http://localhost:3000";
-
 const Home = () => {
   // useState là một hook, quản lý trạng thái
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -48,11 +47,10 @@ const Home = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const socket = useSocket();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    socketRef.current = io(SOCKET_SERVER_URL);
     //io: khởi tạo kết nối đến sv SocketIO
 
     // lấy thông tin các cuộc trò chuyện của người dùng đang đăng nhập
@@ -96,31 +94,27 @@ const Home = () => {
 
     fetchConversations();
 
-    return () => {
-      socketRef.current?.disconnect();
-      socketRef.current = null;
-    };
   }, []);
   
   useEffect(() => {
-    if (!currentConversation || !socketRef.current) return;
+    if (!currentConversation || !socket) return;
     // Lắng nghe tin nhắn mới từ server
-    socketRef.current.on("receive_message", (message: Message) => {
+    socket.on("receive_message", (message: Message) => {
       // on nghe sự kiện
       setMessages((prev) => [...prev, message]);
     });
 
     return () => {
-      socketRef.current?.off("receive_message");
+      socket?.off("receive_message");
     };
-  }, [currentConversation])
+  }, [currentConversation, socket])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const loadMessages = (conversation: Conversation) => {
-    if (!socketRef.current) return;
+    if (!socket) return;
 
     const idcon: ListMessage = { conversationId: conversation._id };
 
@@ -129,7 +123,7 @@ const Home = () => {
       .getMessage(idcon)
       .then((data) => {
         setMessages(data.messages);
-        socketRef.current?.emit("join_room", conversation._id);
+        socket?.emit("join_room", conversation._id);
       })
       .catch((err) => {
         console.error(
@@ -149,7 +143,7 @@ const Home = () => {
       type: "text",
     };
 
-    socketRef.current?.emit("send_message", dataMessage)
+    socket?.emit("send_message", dataMessage);
 
     setNewMessage("");
   };
