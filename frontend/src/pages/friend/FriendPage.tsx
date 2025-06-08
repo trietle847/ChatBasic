@@ -9,10 +9,12 @@ import {
   faSearch,
   faUserPlus,
   faUserGroup,
+  faUsers
 } from "@fortawesome/free-solid-svg-icons";
 
 import FriendsList from "./FriendList";
 import RequestAddFriend from "./requestAddFriend"
+import GroupList from "./GroupList"
 
 const FriendPage = () => {
   const [activeTab, setActiveTab] = useState("friends")
@@ -42,6 +44,13 @@ const FriendPage = () => {
             className="text-blue-600 hover:bg-blue-100 transition"
           >
             <FontAwesomeIcon icon={faUserPlus} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-blue-600 hover:bg-blue-100 transition"
+          >
+            <FontAwesomeIcon icon={faUsers} />
           </Button>
         </div>
 
@@ -94,6 +103,7 @@ const FriendPage = () => {
       <div className="flex-1 p-6">
         {activeTab === "friends" && <FriendsList />}
         {activeTab === "invites" && <RequestAddFriend />}
+        {activeTab === "groups" && <GroupList />}
       </div>
     </div>
   );
