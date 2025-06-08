@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import FriendService from "@/services/friend.service";
 import UserService from "@/services/user.service";
+import { useSocket } from "@/socket/socketContex";
 
 import { Button } from "@/components/ui/button";
 
@@ -18,30 +19,42 @@ interface Request {
 
 const FriendsList = () => {
   const [request, setRequest] = useState<Request[]>([]);
+  const socket = useSocket();
+
+  const fetchRequest = async () => {
+    const res = await FriendService.getRequestAddFriend();
+    const listRequest: Request[] = res.result;
+
+    const userIds = listRequest.map((r) => r.user1);
+    const promise = userIds.map((id) => UserService.findUserById(id));
+    const result = await Promise.all(promise);
+
+    const fullRequest = listRequest.map((r, index) => ({
+      ...r,
+      hotenUser1: result[index].user.hoten,
+    }));
+
+    setRequest(fullRequest);
+  };
 
   useEffect(() => {
-    const fetchRequest = async () => {
-      const res = await FriendService.getRequestAddFriend();
-      const listRequest: Request[] = res.result;
-
-      const userIds = listRequest.map((r) => r.user1);
-
-      const promise = userIds.map((id: string) => UserService.findUserById(id));
-
-      const result = await Promise.all(promise);
-
-      const fullRequest = listRequest.map((r, index) => ({
-        ...r, // từng phần tử trong listRequest
-        hotenUser1: result[index].user.hoten,
-      }));
-
-      setRequest(fullRequest);
-      console.log(fullRequest);
-    };
-
     fetchRequest();
   }, []);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleFriendRequest = async () => {
+      await fetchRequest();
+    } 
+
+    socket.on("receive_friend_request", handleFriendRequest);
+
+    return () => {
+      socket.off("receive_friend_request",handleFriendRequest);
+    };
+  },[socket]);
+  
   const handleAcceptRequest = async (id: string) => {
     try {
       const result = await FriendService.acceptRequest(id);
