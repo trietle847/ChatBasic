@@ -5,10 +5,12 @@ import HomePage from "./pages/home_simple_chat";
 import ListFriendPage from "./pages/friend/FriendPage";
 
 import { SocketProvider } from "@/socket/socketContex";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <SocketProvider>
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
