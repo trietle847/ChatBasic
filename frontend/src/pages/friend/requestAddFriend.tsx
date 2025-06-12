@@ -17,7 +17,7 @@ interface Request {
 //   hoten: string;
 // }
 
-const FriendsList = () => {
+const RequestList = () => {
   const [request, setRequest] = useState<Request[]>([]);
   const socket = useSocket();
 
@@ -120,4 +120,4 @@ const FriendsList = () => {
   );
 };
 
-export default FriendsList;
+export default RequestList;

@@ -8,7 +8,7 @@ interface Group {
   members: string[];
 }
 
-const FriendsList = () => {
+const GroupList = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -63,4 +63,4 @@ const FriendsList = () => {
   );
 };
 
-export default FriendsList;
+export default GroupList;
