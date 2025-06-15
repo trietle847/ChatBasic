@@ -14,7 +14,26 @@ module.exports = {
 
     io.on("connection", (socket) => {
       console.log("socket connected", socket.id);
+      socket.on("agora_call_start", ({ channel, members }) => {
+        console.log(`Cuộc gọi bắt đầu tại channel ${channel}`);
 
+        members.forEach((memberId) => {
+          if (
+            userSocketMap.get(memberId) &&
+            userSocketMap.get(memberId) !== socket.id
+          ) {
+            const targetSocketId = userSocketMap.get(memberId);
+            io.to(targetSocketId).emit("receive_agora_call", {
+              channel,
+              members,
+            });
+            console.log(
+              `Gửi tín hiệu cuộc gọi đến user ${memberId} - socket ${targetSocketId}`
+            );
+          }
+        });
+      });
+      
       socket.on("register_user", (userId) => {
         userSocketMap.set(userId, socket.id);
         socket.join(userId);
