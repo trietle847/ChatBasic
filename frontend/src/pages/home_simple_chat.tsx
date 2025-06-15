@@ -19,6 +19,9 @@ import messageService, {
   type ListMessage,
 } from "@/services/message.service";
 
+import { CallOverlay } from "@/components/selfCreate/CallScreen";
+
+
 interface Message {
   _id: string;
   senderId: { _id: string; hoten?: string; email?: string } | string;
@@ -49,6 +52,7 @@ const Home = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const socket = useSocket();
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [callInfo, setCallInfo] = useState<{ channel: string } | null>(null);
 
   useEffect(() => {
     //io: khởi tạo kết nối đến sv SocketIO
@@ -95,6 +99,22 @@ const Home = () => {
     fetchConversations();
 
   }, []);
+
+  useEffect(() => {
+    if (!socket || !userId) return;
+
+    socket.on("receive_agora_call", ({ channel, members }) => {
+      if (members.includes(userId)) {
+        setCallInfo({ channel });
+      }
+    });
+    
+
+    return () => {
+      socket.off("receive_agora_call");
+    };
+  }, [socket, userId]);
+  
   
   useEffect(() => {
     if (!currentConversation || !socket) return;
@@ -157,7 +177,7 @@ const Home = () => {
   return (
     <div className="flex h-screen w-screen bg-gray-100">
       {/* Sidebar */}
-      <Sidebar/>
+      <Sidebar />
       <div className="w-1/4 bg-white p-4 border-r overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Chats</h2>
         <div className="flex items-center justify-between mb-4 space-x-2">
@@ -217,9 +237,25 @@ const Home = () => {
               : currentConversation?.otherUser}{" "}
           </h3>
           <div className="flex gap-4 items-center">
-            <button className="text-gray-600 hover:text-blue-600 transition">
+            <button
+              className="text-gray-600 hover:text-blue-600 transition"
+              onClick={() => {
+                if (currentConversation && userId && socket) {
+                  const channel = currentConversation._id;
+                  setCallInfo({ channel });
+                  console.log(
+                    "[UI] Gọi điện được nhấn: đang gọi joinChannel..."
+                  );
+                  socket.emit("agora_call_start", {
+                    channel,
+                    members: currentConversation.members.map((m) => m._id),
+                  });
+                }
+              }}
+            >
               <FontAwesomeIcon icon={faPhone} />
             </button>
+
             <button className="text-gray-600 hover:text-blue-600 transition">
               <FontAwesomeIcon icon={faVideo} />
             </button>
@@ -284,6 +320,14 @@ const Home = () => {
           <Button onClick={handleSend}>Send</Button>
         </div>
       </div>
+      {callInfo && (
+        <CallOverlay
+          channel={callInfo.channel}
+          onClose={() => {
+            setCallInfo(null); 
+          }}
+        />
+      )}
     </div>
   );
 };
