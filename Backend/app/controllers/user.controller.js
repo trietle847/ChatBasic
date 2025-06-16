@@ -144,3 +144,29 @@ exports.searchUserByPhone= async (req, res, next) => {
 
   }
 };
+
+exports.uploadAvatar = async (req, res, next ) => {
+  try {
+    const userId = req.user.userId;
+
+    if (!req.file || !req.file.path) {
+      return next(new ApiError(400, "Không tìm thấy file ảnh."));
+    }
+
+    const imgUrl = req.file.path;
+
+    const userService = new UserService(MongoDB.client);
+    const result = await userService.updateUser(userId, { avatar: imgUrl });
+
+    if (!result) {
+      return next(new ApiError(404, "Không tìm thấy người dùng để cập nhật."));
+    }
+
+    res.send({
+      message: "Cập nhật avatar thành công",
+      avatar: result.avatar,
+    });
+  } catch (error) {
+    return next(new ApiError(500, `Lỗi khi cập nhật avatar: ${error.message}`));
+  }
+}
