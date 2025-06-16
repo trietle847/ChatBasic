@@ -32,6 +32,7 @@ interface Message {
 interface User {
   _id: string;
   tendangnhap: string;
+  avatar: string;
 }
 
 interface Conversation {
@@ -41,6 +42,7 @@ interface Conversation {
   name: string;
   members: User[];
   otherUser?: string;
+  Avatar: string;
 }
 
 const Home = () => {
@@ -79,7 +81,8 @@ const Home = () => {
                   const otherRes = await userService.findUserById(otherUser._id)
                   return {
                     ...conv,
-                    otherUser: otherRes.user.hoten
+                    otherUser: otherRes.user.hoten,
+                    Avatar: otherRes.user.avatar,
                   }
                 } catch (error) {
                   console.log("Lỗi",error)
@@ -91,6 +94,7 @@ const Home = () => {
           })
         )
         setConversations(updateDataConvs);
+        console.log(updateDataConvs);
       } catch (error) {
         console.error("Lỗi khi load cuộc trò chuyện hoặc user:", error);
       }
@@ -213,7 +217,7 @@ const Home = () => {
               <CardContent className="flex items-center space-x-3 py-3">
                 <Avatar>
                   <AvatarImage
-                    src={`https://i.pravatar.cc/150?u=${conv._id}`}
+                    src={conv.Avatar}
                   />
                   <AvatarFallback>
                     {conv.name?.slice(0, 2).toUpperCase()}
@@ -324,7 +328,7 @@ const Home = () => {
         <CallOverlay
           channel={callInfo.channel}
           onClose={() => {
-            setCallInfo(null); 
+            setCallInfo(null);
           }}
         />
       )}
