@@ -4,6 +4,7 @@ import Sidebar from "@/components/selfCreate/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import AddFriendModal from "@/components/selfCreate/FindvsAddFriend";
+import CreateGroupModal from "@/components/selfCreate/CreateGroup";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -20,6 +21,7 @@ import GroupList from "./GroupList"
 const FriendPage = () => {
   const [activeTab, setActiveTab] = useState("friends")
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isCreateGroupOpen, setCreateGroupOpen] = useState(false);
 
   return (
     <div className="flex h-screen w-screen bg-gray-100">
@@ -52,6 +54,7 @@ const FriendPage = () => {
             variant="ghost"
             size="icon"
             className="text-blue-600 hover:bg-blue-100 transition"
+            onClick={() => setCreateGroupOpen(true)}
           >
             <FontAwesomeIcon icon={faUsers} />
           </Button>
@@ -60,6 +63,10 @@ const FriendPage = () => {
         <AddFriendModal
           open={isModalOpen}
           onClose={() => setModalOpen(false)}
+        />
+        <CreateGroupModal
+          open={isCreateGroupOpen}
+          onClose={() => setCreateGroupOpen(false)}
         />
 
         {/* tab */}
@@ -93,16 +100,6 @@ const FriendPage = () => {
             onClick={() => setActiveTab("invites")}
           >
             Lời mời kết bạn <FontAwesomeIcon icon={faUserGroup} />
-          </Button>
-          <Button
-            className={`justify-start px-4 py-2 rounded-md border flex items-center gap-2 text-black hover:bg-blue-100 ${
-              activeTab === "group-invites"
-                ? "bg-blue-100 border-blue-500"
-                : "bg-white"
-            }`}
-            onClick={() => setActiveTab("group-invites")}
-          >
-            Lời mời vào nhóm <FontAwesomeIcon icon={faUserGroup} />
           </Button>
         </div>
       </div>

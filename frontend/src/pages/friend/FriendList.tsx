@@ -9,6 +9,7 @@ interface Friend {
 interface User {
   _id: string;
   hoten: string;
+  avatar: string;
 }
 
 const FriendsList = () => {
@@ -22,6 +23,7 @@ const FriendsList = () => {
       const promises = data.map((f: string) => UserService.findUserById(f));
       const results = await Promise.all(promises);
       setFriends(results);
+      console.log(results)
     };
     fetchFriends();
   }, []);
@@ -50,13 +52,13 @@ const FriendsList = () => {
 
       {/* Danh sách bạn bè */}
       <div className="divide-y divide-gray-200">
-        {filteredFriends.map((item, index) => (
+        {filteredFriends.map((item) => (
           <div
             key={item.user._id}
             className="flex items-center py-3 hover:bg-gray-50 cursor-pointer"
           >
             <img
-              src={`https://i.pravatar.cc/150?img=${index + 1}`}
+              src={`${item.user.avatar}`}
               alt={item.user.hoten}
               className="w-10 h-10 rounded-full object-cover mr-4"
             />
