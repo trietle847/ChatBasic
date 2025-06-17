@@ -41,6 +41,18 @@ const userService = {
   searchUserByPhone: async(phone: string) => {
     const response = await createAPI.post("/user/search/phone", {phone})
     return response.data;
+  },
+
+  updateUser: async(data: Partial<RegisterData>) => {
+    const response = await createAPI.put("/user",data)
+    return response.data;
+  },
+
+  updateAvatar: async(data: FormData) => {
+    const response = await createAPI.post("/user/upload-avatar", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
   }
 }
 
