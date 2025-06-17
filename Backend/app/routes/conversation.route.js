@@ -5,7 +5,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 const router = express.Router(); 
 
 router.route("/")
-    .post(conversationController.createCoversation)
+    .post(authMiddleware,conversationController.createCoversation)
     .get(authMiddleware, conversationController.getUserConversation)
 
 router.route("/get/group")

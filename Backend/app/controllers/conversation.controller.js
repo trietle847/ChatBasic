@@ -3,9 +3,11 @@ const ApiError = require("../api-error");
 
 exports.createCoversation = async (req, res, next) => {
   try {
-    const { memberIds, name } = req.body;
+    const { memberIds = [], name } = req.body;
+    const userId = req.user.userId;
+    const updateMemberIds = Array.from(new Set([...memberIds, userId]));
     const conversation = await conversationService.findAndCreate(
-      memberIds,
+      updateMemberIds,
       name
     );
 
