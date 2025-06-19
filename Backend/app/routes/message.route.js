@@ -5,8 +5,13 @@ const upload = require("../config/upload_supabase");
 const router = express.Router();
 
 router
-  .route("/")
-  .post(authMiddleware,upload.single("file"),messageController.sendMessage)
+  .route("/upload/file")
+  .post(authMiddleware, upload.single("file"), messageController.sendFileMessage);
+ 
+router
+  .route("/text")
+  .post(authMiddleware, messageController.sendTextMessage);
+  
 router.route("/get")
   .post(messageController.getMessages);
 
