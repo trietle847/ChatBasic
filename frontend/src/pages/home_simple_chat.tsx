@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import  Sidebar  from "@/components/selfCreate/sidebar";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPhone, faVideo, faGear, faUserPlus, faSearch} from "@fortawesome/free-solid-svg-icons";
+import { faPhone, faVideo, faGear, faUserPlus, faSearch, faPaperclip} from "@fortawesome/free-solid-svg-icons";
 
 import { useState, useEffect, useRef } from "react";
 
@@ -26,7 +26,8 @@ interface Message {
   _id: string;
   senderId: { _id: string; hoten?: string; email?: string } | string;
   content: string;
-  type: string;
+  file?: string;
+  type: "text" | "file" | "image" | "video";
 }
 
 interface User {
@@ -55,6 +56,7 @@ const Home = () => {
   const socket = useSocket();
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [callInfo, setCallInfo] = useState<{ channel: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     //io: khởi tạo kết nối đến sv SocketIO
@@ -178,6 +180,29 @@ const Home = () => {
     loadMessages(conversation)
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId || !currentConversation) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("conversationId", currentConversation._id);
+    formData.append("senderId", userId);
+    formData.append("type", "file");
+
+    try {
+      const response = await messageService.uploadFile(formData); 
+      const msg = response.message;
+      console.log(response)
+      socket?.emit("send_message", msg);
+    } catch (err) {
+      console.error("Lỗi upload file:", err);
+    } finally {
+      e.target.value = ""; // reset file input
+    }
+  };
+  
+
   return (
     <div className="flex h-screen w-screen bg-gray-100">
       {/* Sidebar */}
@@ -216,9 +241,7 @@ const Home = () => {
             >
               <CardContent className="flex items-center space-x-3 py-3">
                 <Avatar>
-                  <AvatarImage
-                    src={conv.Avatar}
-                  />
+                  <AvatarImage src={conv.Avatar} />
                   <AvatarFallback>
                     {conv.name?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -302,8 +325,28 @@ const Home = () => {
                     >
                       {msg.type === "text" ? (
                         msg.content
+                      ) : msg.type === "image" ? (
+                        <img
+                          src={msg.file}
+                          alt={msg.content}
+                          className="max-w-[200px] rounded"
+                        />
+                      ) : msg.type === "video" ? (
+                        <video controls className="max-w-[250px] rounded">
+                          <source src={msg.file} type="video/mp4" />
+                          Trình duyệt không hỗ trợ video
+                        </video>
+                      ) : msg.type === "file" ? (
+                        <a
+                          href={msg.file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline text-blue-200"
+                        >
+                          📎 {msg.content}
+                        </a>
                       ) : (
-                        <em>[Unsupported type]</em>
+                        <em>[Unsupported]</em>
                       )}
                     </div>
                   </div>
@@ -321,6 +364,19 @@ const Home = () => {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
           />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="text-gray-500 hover:text-blue-500"
+          >
+            <FontAwesomeIcon icon={faPaperclip} />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
           <Button onClick={handleSend}>Send</Button>
         </div>
       </div>
