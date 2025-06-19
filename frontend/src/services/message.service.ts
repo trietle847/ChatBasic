@@ -5,10 +5,10 @@ export interface ListMessage {
 }
 
 export interface dataMessage {
-    conversationId: string;
-    senderId: string;
-    content: string;
-    type: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  type: string;
 }
 
 const messageService = {
@@ -18,10 +18,16 @@ const messageService = {
     return response.data;
   },
   sendMessage: async (data: dataMessage) => {
-    const response = await createAPI.post("/message", data);
+    const response = await createAPI.post("/message/text", data);
 
     return response.data;
-  }
+  },
+  uploadFile: async (data: FormData) => {
+    const response = await createAPI.post("/message/upload/file", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
 };
 
 export default messageService;
