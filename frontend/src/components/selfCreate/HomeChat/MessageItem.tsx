@@ -3,7 +3,7 @@ interface Message {
   senderId: { _id: string; hoten?: string; email?: string } | string;
   content: string;
   file?: string;
-  type: "text" | "file" | "image" | "video";
+  type: "text" | "file" | "image" | "video" | "system";
 }
 
 interface Props {

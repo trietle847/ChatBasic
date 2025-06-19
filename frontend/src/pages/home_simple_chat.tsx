@@ -1,4 +1,4 @@
-// Home.tsx (đã refactor)
+// ===== 📁 pages/Home.tsx (SAU KHI FIX LỖI CUỘC GỌI KHÔNG HIỆN CHO NGƯỜI GỌI) =====
 import ChatSidebar from "@/components/selfCreate/HomeChat/ChatSideBar";
 import ChatHeader from "@/components/selfCreate/HomeChat/ChatHeader";
 import ChatMessages from "@/components/selfCreate/HomeChat/ChatMessage";
@@ -8,7 +8,6 @@ import Sidebar from "@/components/selfCreate/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket } from "@/socket/socketContex";
 import { CallOverlay } from "@/components/selfCreate/CallScreen";
-
 import { useEffect, useRef, useState } from "react";
 import userService from "@/services/user.service";
 import conversationService from "@/services/conversation.service";
@@ -22,7 +21,7 @@ interface Message {
   senderId: { _id: string; hoten?: string; email?: string } | string;
   content: string;
   file?: string;
-  type: "text" | "file" | "image" | "video";
+  type: "text" | "file" | "image" | "video" | "system";
 }
 
 interface User {
@@ -43,11 +42,17 @@ interface Conversation {
 
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const [currentConversation, setCurrentConversation] =
+    useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-  const [callInfo, setCallInfo] = useState<{ channel: string } | null>(null);
+  const [callInfo, setCallInfo] = useState<{
+    channel: string;
+    incoming?: boolean;
+    conversationId?: string;
+    callerId?: string;
+  } | null>(null);
 
   const socket = useSocket();
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -75,7 +80,7 @@ export default function Home() {
                     Avatar: otherRes.user.avatar,
                   };
                 } catch (error) {
-                  return { ...conv, otherUser: "Unknown" , error};
+                  return { ...conv, otherUser: "Unknown", error };
                 }
               }
             }
@@ -93,13 +98,29 @@ export default function Home() {
 
   useEffect(() => {
     if (!socket || !userId) return;
-    socket.on("receive_agora_call", ({ channel, members }) => {
-      if (members.includes(userId)) {
-        setCallInfo({ channel });
-      }
+
+    socket.on("receive_call_request", ({channel, conversationId, from }) => {
+      setCallInfo({ channel, incoming: true, conversationId, callerId: from });
     });
+
+    socket.on(
+      "call_response_result",
+      ({ accepted, channel, conversationId }) => {
+        if (accepted) {
+          setCallInfo({ channel, incoming: false, conversationId });
+        } else {
+          alert("Cuộc gọi đã bị từ chối!");
+          socket.emit("send_system_message", {
+            conversationId,
+            content: "Cuộc gọi đã bị tỮ chối.",
+          });
+        }
+      }
+    );
+
     return () => {
-      socket.off("receive_agora_call");
+      socket.off("receive_call_request");
+      socket.off("call_response_result");
     };
   }, [socket, userId]);
 
@@ -167,9 +188,34 @@ export default function Home() {
     }
   };
 
+  const handleCall = () => {
+    if (!currentConversation || !userId) return;
+    const otherUser = currentConversation.members.find((m) => m._id !== userId);
+    const channel = `call-${Date.now()}`;
+    socket?.emit("call_request", {
+      to: otherUser?._id,
+      from: userId,
+      channel,
+      conversationId: currentConversation._id,
+    });
+  };
+
+  const handleCallResponse = (accept: boolean) => {
+    if (!callInfo || !callInfo.callerId || !callInfo.conversationId) return;
+    socket?.emit("call_response", {
+      to: callInfo.callerId,
+      accepted: accept,
+      channel: callInfo.channel,
+      conversationId: callInfo.conversationId,
+    });
+    if (!accept) {
+      setCallInfo(null);
+    }
+  };
+
   return (
     <div className="flex h-screen w-screen bg-gray-100">
-      <Sidebar/>
+      <Sidebar />
       <ChatSidebar
         conversations={conversations}
         currentConversationId={currentConversation?._id || null}
@@ -179,10 +225,7 @@ export default function Home() {
         <ChatHeader
           conversation={currentConversation}
           userId={userId}
-          onCall={(channel, members) => {
-            setCallInfo({ channel });
-            socket?.emit("agora_call_start", { channel, members });
-          }}
+          onCall={handleCall}
         />
         <ScrollArea className="flex-1 overflow-y-auto">
           <ChatMessages
@@ -201,7 +244,12 @@ export default function Home() {
       {callInfo && (
         <CallOverlay
           channel={callInfo.channel}
+          incoming={callInfo.incoming}
           onClose={() => setCallInfo(null)}
+          onAccept={() => handleCallResponse(true)}
+          onReject={() => handleCallResponse(false)}
+          conversationId={callInfo.conversationId}
+          callerId={callInfo.callerId}
         />
       )}
     </div>
