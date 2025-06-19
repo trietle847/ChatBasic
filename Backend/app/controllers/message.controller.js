@@ -3,52 +3,91 @@ const messageService = require("../services/messages.service");
 const conversationService = require("../services/conversation.service");
 const socketUtil = require("../utils/socket.util");
 const supabase = require("../config/supabase");
+const path = require("path");
 
-exports.sendMessage = async (req, res, next) => {
+exports.sendTextMessage = async (req, res, next) => {
   try {
     const { conversationId, content } = req.body;
     const senderId = req.user.userId;
 
-    let fileUrl = null;
-    if (req.file) {
-      const buffer = req.file.buffer;
-      const fileName = `${Date.now()}-${req.file.originalname}`;
+    const Message = await messageService.sendMessage({
+      conversationId,
+      senderId,
+      content,
+      type: "text",
+    });
 
-      const { error } = await supabase.storage
-        .from("chatuploads")
-        .upload(fileName, buffer, {
-          contentType: req.file.mimetype,
-          upsert: true,
-        });
+    await conversationService.updateLastMessage(conversationId, Message._id);
 
-      if (error) throw error;
+    const io = socketUtil.getIO();
+    io.to(conversationId).emit("receive_message", Message);
 
-      const { data: publicUrl } = supabase.storage
-        .from("chatuploads")
-        .getPublicUrl(fileName);
+    return res.send({
+      message: "Tạo tin nhắn văn bản thành công",
+      Message,
+    });
+  } catch (error) {
+    return next(
+      new ApiError(500, `Lỗi khi gửi tin nhắn văn bản: ${error.message}`)
+    );
+  }
+};
 
-      fileUrl = publicUrl.publicUrl;
+exports.sendFileMessage = async (req, res, next) => {
+  try {
+    const { conversationId } = req.body;
+    const senderId = req.user.userId;
+
+    if (!req.file) {
+      return next(new ApiError(400, "Không có file được gửi"));
+    }
+
+    const buffer = req.file.buffer;
+    const ext = path.extname(req.file.originalname);
+    const fileName = `${Date.now()}-${req.file.originalname}`;
+
+    const { error } = await supabase.storage
+      .from("chatuploads")
+      .upload(fileName, buffer, {
+        contentType: req.file.mimetype,
+        upsert: true,
+      });
+
+    if (error) throw error;
+
+    const { data: publicUrl } = supabase.storage
+      .from("chatuploads")
+      .getPublicUrl(fileName);
+
+    const fileUrl = publicUrl.publicUrl;
+    const content = req.file.originalname;
+
+    let type = "file";
+    if (req.file.mimetype.startsWith("image/")) {
+      type = "image";
+    } else if (req.file.mimetype.startsWith("video/")) {
+      type = "video";
     }
 
     const Message = await messageService.sendMessage({
       conversationId,
       senderId,
       content,
-      fileUrl,
+      file: fileUrl,
+      type,
     });
-    // console.log(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     await conversationService.updateLastMessage(conversationId, Message._id);
 
     const io = socketUtil.getIO();
-    io.to(conversationId).emit("receive_message",Message)
+    io.to(conversationId).emit("receive_message", Message);
 
     return res.send({
-      message: "Tạo tin nhắn mới thành công",
+      message: "Gửi file thành công",
       Message,
     });
   } catch (error) {
-    return next(new ApiError(500, `Lỗi khi tạo tin nhắn mới ${error.message}`));
+    return next(new ApiError(500, `Lỗi khi gửi file: ${error.message}`));
   }
 };
 
