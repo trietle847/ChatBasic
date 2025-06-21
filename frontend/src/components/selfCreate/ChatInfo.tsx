@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Button } from "../ui/button";
+import AddMembersModal from "./AddGroupMemberModal";
 
 interface User {
   _id: string;
@@ -31,28 +33,41 @@ interface Props {
 }
 
 export default function ConversationInfo({ conversation, messages }: Props) {
-  console.log()
+  console.log();
+  const [showAdd, setShowAdd] = useState(false);
+  const [conver, setConversation] = useState<Conversation>();
+  const currentConversation = conver || conversation // lấy giá trị ban đầu hoặc mới cập nhật
   return (
     <div className="h-full w-full p-4 bg-white border-l">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">Thông tin cuộc trò chuyện</h2>
       </div>
       <img
-        src={conversation.Avatar}
+        src={currentConversation.Avatar}
         className="w-24 h-24 rounded-full mx-auto"
         alt="Avatar"
       />
       <h3 className="text-center text-xl font-semibold mt-2">
-        {conversation.type === "group"
-          ? conversation.name
-          : conversation.otherUser}
+        {currentConversation.type === "group"
+          ? currentConversation.name
+          : currentConversation.otherUser}
       </h3>
       <div className="mt-4">
-        {conversation.type === "group" && <Button>Thêm thành viên</Button>}
+        {currentConversation.type === "group" && (
+          <Button onClick={() => setShowAdd(true)}>Thêm thành viên</Button>
+        )}
       </div>
+      {showAdd && (
+        <AddMembersModal
+          onClose={() => setShowAdd(false)}
+          conversation={currentConversation}
+          setConversation={setConversation}
+        />
+      )}
+
       <div className="mt-4">
         <h4 className="font-semibold mb-2">
-          Thành viên nhóm ({conversation.members.length})
+          Thành viên nhóm ({currentConversation.members.length})
         </h4>
         <Button>Xem thành viên</Button>
         {/* <ul className="space-y-1">
