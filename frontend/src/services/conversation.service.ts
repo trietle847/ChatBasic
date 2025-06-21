@@ -16,6 +16,10 @@ export interface AddMemberData {
   memberId: string;
 }
 
+export interface DeleteUser {
+    conversationId: string;
+    memberId: string;
+}
 const conversationService = {
     getConversation: async() => {
         const response = await createAPI.get("/conversation");
@@ -32,6 +36,10 @@ const conversationService = {
     }, 
     addMember: async(data: AddMemberData) => {  
         const response = await createAPI.put("/conversation/addMember",data);
+        return response.data;
+    },
+    deleteUser: async(data: DeleteUser) => {
+        const response = await createAPI.put("/conversation/removeMember", data);
         return response.data;
     }
 }
