@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import AddMembersModal from "./AddGroupMemberModal";
+import GroupMemberList from "./GroupMemberList";
 
 interface User {
   _id: string;
+  hoten: string;
   tendangnhap: string;
   avatar: string;
 }
@@ -33,10 +35,20 @@ interface Props {
 }
 
 export default function ConversationInfo({ conversation, messages }: Props) {
-  console.log();
   const [showAdd, setShowAdd] = useState(false);
+  const [showMember, setShowMember] = useState(false);
   const [conver, setConversation] = useState<Conversation>();
   const currentConversation = conver || conversation // lấy giá trị ban đầu hoặc mới cập nhật
+  if (showMember) {
+    return (
+      <GroupMemberList 
+        members={currentConversation.members}
+        onBack={() => setShowMember(false)} 
+        conversation={currentConversation}
+        setConversation={setConversation}
+        />
+    )
+  }
   return (
     <div className="h-full w-full p-4 bg-white border-l">
       <div className="flex justify-between items-center mb-4">
@@ -69,15 +81,7 @@ export default function ConversationInfo({ conversation, messages }: Props) {
         <h4 className="font-semibold mb-2">
           Thành viên nhóm ({currentConversation.members.length})
         </h4>
-        <Button>Xem thành viên</Button>
-        {/* <ul className="space-y-1">
-          {conversation.members.map((m) => (
-            <li key={m._id} className="flex items-center gap-2">
-              <img src={m.avatar} className="w-8 h-8 rounded-full" />
-              <span>{m.tendangnhap}</span>
-            </li>
-          ))}
-        </ul> */}
+        <Button onClick={() => setShowMember(true)}>Xem thành viên</Button>
       </div>
       <div className="mt-4">
         <h3 className="font-semibold mb-2">Ảnh/Video</h3>

@@ -29,6 +29,7 @@ interface User {
   _id: string;
   tendangnhap: string;
   avatar: string;
+  hoten: string;
 }
 
 interface Friend {
