@@ -3,6 +3,10 @@ import { faPhone, faVideo, faGear, faPen } from "@fortawesome/free-solid-svg-ico
 import ChatInfo from "@/components/selfCreate/ChatInfo";
 import { useState } from "react";
 
+import RenameGroupModal from "@/components/selfCreate/RenameGroup";
+
+import ConversationService from "@/services/conversation.service";
+
 interface User {
   _id: string;
   tendangnhap: string;
@@ -37,6 +41,24 @@ interface Props {
 
 export default function ChatHeader({ conversation, messages ,userId, onCall, onOpenInfo }: Props) {
   const [showInfo, setShowInfo] = useState(false);
+  const [isEditing, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
+
+  const handleRenameGroup = async (name: string) => {
+    if (!conversation) return;
+    try {
+      const renameData = {
+        name: name,
+        conversationId: conversation._id,
+      }
+      const result = await ConversationService.renameConversation(renameData);
+      conversation.name = name;
+      console.log(result)
+      setIsEditingName(false);
+    } catch (error) {
+      console.log(error);
+    }
+  }
   
   if (!conversation) return null;
 
@@ -53,7 +75,10 @@ export default function ChatHeader({ conversation, messages ,userId, onCall, onO
           {conversation.type === "group" && (
             <button
               className="text-gray-600 hover:text-blue-600 transition text-sm"
-              onClick={() => alert("Đổi tên nhóm")}
+              onClick={() => {
+                setNewName(conversation.name);
+                setIsEditingName(true);
+              }}
             >
               <FontAwesomeIcon icon={faPen} />
             </button>
@@ -91,6 +116,13 @@ export default function ChatHeader({ conversation, messages ,userId, onCall, onO
           conversation={conversation}
           messages={messages}
           onClose={() => setShowInfo(false)}
+        />
+      )}
+      {isEditing && (
+        <RenameGroupModal
+          intialName={newName}
+          onClose={() => setIsEditingName(false)}
+          onSave={handleRenameGroup}
         />
       )}
     </>
