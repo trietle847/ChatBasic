@@ -10,6 +10,12 @@ export interface RenameData {
   conversationId: string;
   name: string;
 }
+
+export interface AddMemberData {
+  conversationId: string;
+  memberId: string;
+}
+
 const conversationService = {
     getConversation: async() => {
         const response = await createAPI.get("/conversation");
@@ -22,6 +28,10 @@ const conversationService = {
     renameConversation: async(data: RenameData) => {
         const response = await createAPI.put("/conversation/renameConver", data
         );
+        return response.data;
+    }, 
+    addMember: async(data: AddMemberData) => {  
+        const response = await createAPI.put("/conversation/addMember",data);
         return response.data;
     }
 }
