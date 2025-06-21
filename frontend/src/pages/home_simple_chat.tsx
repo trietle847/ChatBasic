@@ -1,9 +1,9 @@
-// ===== 📁 pages/Home.tsx (SAU KHI FIX LỖI CUỘC GỌI KHÔNG HIỆN CHO NGƯỜI GỌI) =====
 import ChatSidebar from "@/components/selfCreate/HomeChat/ChatSideBar";
 import ChatHeader from "@/components/selfCreate/HomeChat/ChatHeader";
 import ChatMessages from "@/components/selfCreate/HomeChat/ChatMessage";
 import ChatInput from "@/components/selfCreate/HomeChat/ChatInput";
 import Sidebar from "@/components/selfCreate/sidebar";
+import ChatInfo from "@/components/selfCreate/ChatInfo";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket } from "@/socket/socketContex";
@@ -53,10 +53,12 @@ export default function Home() {
     conversationId?: string;
     callerId?: string;
   } | null>(null);
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
 
   const socket = useSocket();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  // Load conversation
   useEffect(() => {
     const fetchConversations = async () => {
       try {
@@ -64,6 +66,7 @@ export default function Home() {
         setUserId(me.user._id);
         const response = await conversationService.getConversation();
         const dataConvs = response.data.conversations;
+        console.log(dataConvs)
 
         const updateDataConvs = await Promise.all(
           dataConvs.map(async (conv: Conversation) => {
@@ -84,6 +87,10 @@ export default function Home() {
                 }
               }
             }
+
+            // if (conv.type === "group") {
+            //   return dataConvs
+            // }
             return conv;
           })
         );
@@ -96,10 +103,11 @@ export default function Home() {
     fetchConversations();
   }, []);
 
+  // Gọi video
   useEffect(() => {
     if (!socket || !userId) return;
 
-    socket.on("receive_call_request", ({channel, conversationId, from }) => {
+    socket.on("receive_call_request", ({ channel, conversationId, from }) => {
       setCallInfo({ channel, incoming: true, conversationId, callerId: from });
     });
 
@@ -112,7 +120,7 @@ export default function Home() {
           alert("Cuộc gọi đã bị từ chối!");
           socket.emit("send_system_message", {
             conversationId,
-            content: "Cuộc gọi đã bị tỮ chối.",
+            content: "Cuộc gọi đã bị từ chối.",
           });
         }
       }
@@ -124,6 +132,7 @@ export default function Home() {
     };
   }, [socket, userId]);
 
+  // Nhận tin nhắn
   useEffect(() => {
     if (!currentConversation || !socket) return;
     socket.on("receive_message", (message: Message) => {
@@ -134,6 +143,7 @@ export default function Home() {
     };
   }, [currentConversation, socket]);
 
+  // Auto scroll khi có tin mới
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -171,6 +181,7 @@ export default function Home() {
     setCurrentConversation(conv);
     setMessages([]);
     loadMessages(conv);
+    setShowInfoPanel(false); // Reset panel khi đổi cuộc trò chuyện
   };
 
   const handleFileSend = async (file: File) => {
@@ -221,26 +232,47 @@ export default function Home() {
         currentConversationId={currentConversation?._id || null}
         onSelectConversation={handleSelectConversation}
       />
-      <div className="flex-1 flex flex-col">
-        <ChatHeader
-          conversation={currentConversation}
-          userId={userId}
-          onCall={handleCall}
-        />
-        <ScrollArea className="flex-1 overflow-y-auto">
-          <ChatMessages
+      <div className="flex flex-1">
+        {/* Phần trò chuyện (70% khi panel mở) */}
+        <div
+          className={`flex flex-col transition-all duration-300 ${
+            showInfoPanel ? "w-[70%]" : "w-full"
+          }`}
+        >
+          <ChatHeader
+            conversation={currentConversation}
             messages={messages}
             userId={userId}
-            bottomRef={bottomRef}
+            onCall={handleCall}
+            onOpenInfo={() => setShowInfoPanel((prev) => !prev)}
           />
-        </ScrollArea>
-        <ChatInput
-          newMessage={newMessage}
-          setNewMessage={setNewMessage}
-          onSend={handleSend}
-          onFileSend={handleFileSend}
-        />
+          <ScrollArea className="flex-1 overflow-y-auto">
+            <ChatMessages
+              messages={messages}
+              userId={userId}
+              bottomRef={bottomRef}
+            />
+          </ScrollArea>
+          <ChatInput
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            onSend={handleSend}
+            onFileSend={handleFileSend}
+          />
+        </div>
+
+        {/* Panel thông tin nhóm */}
+        {showInfoPanel && currentConversation && (
+          <div className="w-[30%] border-l bg-white">
+            <ChatInfo
+              conversation={currentConversation}
+              messages = {messages}
+              onClose={() => setShowInfoPanel(false)}
+            />
+          </div>
+        )}
       </div>
+
       {callInfo && (
         <CallOverlay
           channel={callInfo.channel}
