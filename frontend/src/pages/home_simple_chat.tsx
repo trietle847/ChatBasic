@@ -28,6 +28,7 @@ interface User {
   _id: string;
   tendangnhap: string;
   avatar: string;
+  hoten: string;
 }
 
 interface Conversation {
@@ -42,8 +43,7 @@ interface Conversation {
 
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversation, setCurrentConversation] =
-    useState<Conversation | null>(null);
+  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
