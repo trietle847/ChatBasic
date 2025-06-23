@@ -101,6 +101,27 @@ module.exports = {
         }
       );
 
+      socket.on("send_conversation_update", (conversation) => {
+        io.to(conversation._id).emit("conversation_updated", conversation);
+      });
+
+      socket.on("send_new_conversation", ({ to, conversation }) => {
+        const socketId = userSocketMap.get(to);
+        if (socketId) {
+          io.to(socketId).emit("new_conversation", conversation);
+        }
+      });
+      
+      socket.on("kick_user_from_conversation", ({ to, conversationId }) => {
+        const targetSocketId = userSocketMap.get(to);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit("conversation_removed", {
+            conversationId,
+          });
+        }
+      });
+      
+
       socket.on("disconnect", () => {
         for (const [userId, socketId] of userSocketMap.entries()) {
           if (socketId === socket.id) {

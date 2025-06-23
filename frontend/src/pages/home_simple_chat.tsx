@@ -58,6 +58,49 @@ export default function Home() {
   const socket = useSocket();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  //update conversation
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUpdate = (updated: Conversation) => {
+      setConversations((prev) => {
+        const exists = prev.find((c) => c._id === updated._id);
+        if (exists) {
+          return prev.map((c) => c._id === updated._id ? updated: c)
+        }
+        else {
+          return [...prev, updated];
+        }
+      });
+
+      if (currentConversation?._id === updated._id) {
+        setCurrentConversation(updated)
+      }
+    };
+
+    const handleRemove = ({conversationId}: {conversationId : string}) => {
+      setConversations((prev) => 
+      prev.filter((conv) => conv._id !== conversationId))
+
+      if (currentConversation?._id === conversationId){
+        setCurrentConversation(null);
+        setMessages([]);
+        setShowInfoPanel(false); 
+      }
+    }
+
+    socket.on("conversation_updated", handleUpdate);
+    socket.on("new_conversation", handleUpdate);
+    socket.on("conversation_removed", handleRemove);
+
+    return () => {
+      socket.off("conversation_updated", handleUpdate);
+      socket.off("new_conversation", handleUpdate);
+      socket.off("conversation_removed", handleRemove);
+    };
+  },[socket, currentConversation]);
+
+  
   // Load conversation
   useEffect(() => {
     const fetchConversations = async () => {

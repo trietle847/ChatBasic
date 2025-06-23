@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import userService from "@/services/user.service";
 import conversationService from "@/services/conversation.service";
 import AddMembersModal from "./AddGroupMemberModal";
+import { useSocket } from "@/socket/socketContex";
 
 interface User {
   _id: string;
@@ -43,6 +44,8 @@ export default function GroupMemberList({
   const [dataInfo, setDataInfo] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const socket = useSocket();
+  console.log(members)
 
   const fetchMemberDetails = async () => {
     try {
@@ -72,6 +75,12 @@ export default function GroupMemberList({
         members: updateMembers,
       };
       setConversation(updatedConversation);
+      socket?.emit("send_conversation_update", updatedConversation);
+
+      socket?.emit("kick_user_from_conversation", {
+        to: userId,
+        conversationId: conversation._id,
+      })
       fetchMemberDetails()
     } catch (error) {
       console.error(error);

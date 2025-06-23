@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
+import { useSocket } from "@/socket/socketContex";
+
 import {
   Dialog,
   DialogContent,
@@ -45,7 +47,7 @@ type Props = {
 export default function AddMembersModal({ onClose, conversation, setConversation }: Props) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
+  const socket = useSocket();
   //   const currentMemberIds = conversation.members.map((m) => m._id);
 
   useEffect(() => {
@@ -86,13 +88,22 @@ export default function AddMembersModal({ onClose, conversation, setConversation
             console.log(user);
             newMembers.push(user.user);
 
-            const updateCoversation: Conversation = {
+            socket?.emit("send_new_conversation", {
+              to: memberId,
+              conversation: {
                 ...conversation,
-                members: [...conversation.members, ...newMembers]
-            }
+                members: [...conversation.members, ...newMembers],
+              },
+            });
 
-            setConversation(updateCoversation)
         }
+        const updateConversation: Conversation = {
+          ...conversation,
+          members: [...conversation.members, ...newMembers],
+        };
+
+        setConversation(updateConversation);
+        socket?.emit("send_conversation_update", updateConversation); 
         onClose();
     } catch (error) {
         console.error(error);
