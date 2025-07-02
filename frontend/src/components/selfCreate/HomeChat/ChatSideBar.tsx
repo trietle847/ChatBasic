@@ -15,6 +15,7 @@ interface User {
 interface Conversation {
   _id: string;
   createdAt: string;
+  updatedAt: string;
   type: string;
   name: string;
   members: User[];
@@ -81,7 +82,9 @@ export default function ChatSidebar({
                 </span>
                 <span className="text-xs text-gray-600 truncate max-w-[180px]">
                   {conv.senderLastMessage && (
-                    <strong className="mr-1">{conv.senderLastMessage}:</strong>
+                    <strong className="mr-1">
+                      {conv.senderLastMessage}:
+                    </strong>
                   )}
                   {conv.lastMessage}
                 </span>

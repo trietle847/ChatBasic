@@ -34,6 +34,7 @@ interface User {
 interface Conversation {
   _id: string;
   createdAt: string;
+  updatedAt: string;
   type: string;
   name: string;
   members: User[];
@@ -62,34 +63,57 @@ export default function Home() {
 
   //update conversation
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !userId) return;
 
-    const handleUpdate = (updated: Conversation) => {
+    const handleUpdate = (
+      updated: Conversation & { senderLastMessageId?: string }
+    ) => {
+      const senderName =
+        updated.senderLastMessageId === userId
+          ? "Bạn"
+          : updated.senderLastMessage;
+
+      const updatedWithLabel: Conversation = {
+        ...updated,
+        senderLastMessage: senderName,
+      };
+
       setConversations((prev) => {
-        const exists = prev.find((c) => c._id === updated._id);
-        if (exists) {
-          return prev.map((c) => c._id === updated._id ? updated: c)
-        }
-        else {
-          return [...prev, updated];
-        }
+        // Xoá nếu tồn tại rồi chèn vào đầu danh sách
+        const updatedList = prev.filter((c) => c._id !== updated._id);
+        const newList = [updatedWithLabel, ...updatedList];
+
+        // Sắp xếp lại danh sách theo thời gian mới nhất
+        return newList.sort((a, b) => {
+          const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return timeB - timeA;
+        });
       });
 
       if (currentConversation?._id === updated._id) {
-        setCurrentConversation(updated)
+        setCurrentConversation(updatedWithLabel);
       }
     };
 
-    const handleRemove = ({conversationId}: {conversationId : string}) => {
-      setConversations((prev) => 
-      prev.filter((conv) => conv._id !== conversationId))
+    const handleRemove = ({ conversationId }: { conversationId: string }) => {
+      setConversations((prev) => {
+        const newList = prev.filter((conv) => conv._id !== conversationId);
 
-      if (currentConversation?._id === conversationId){
+        // Sắp xếp lại danh sách còn lại
+        return newList.sort((a, b) => {
+          const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return timeB - timeA;
+        });
+      });
+
+      if (currentConversation?._id === conversationId) {
         setCurrentConversation(null);
         setMessages([]);
-        setShowInfoPanel(false); 
+        setShowInfoPanel(false);
       }
-    }
+    };
 
     socket.on("conversation_updated", handleUpdate);
     socket.on("new_conversation", handleUpdate);
@@ -100,8 +124,8 @@ export default function Home() {
       socket.off("new_conversation", handleUpdate);
       socket.off("conversation_removed", handleRemove);
     };
-  },[socket, currentConversation]);
-
+  }, [socket, userId, currentConversation]);
+  
   
   // Load conversation
   useEffect(() => {
@@ -109,24 +133,33 @@ export default function Home() {
       try {
         const me = await userService.getMe();
         setUserId(me.user._id);
+
         const response = await conversationService.getConversation();
         const dataConvs = response.data.conversations;
-        console.log(dataConvs)
 
         const updateDataConvs = await Promise.all(
           dataConvs.map(async (conv: Conversation) => {
             if (conv.lastMessage) {
               try {
-                const messageRes = await messageService.getMessageById(conv.lastMessage);
+                const messageRes = await messageService.getMessageById(
+                  conv.lastMessage
+                );
                 conv.lastMessage = messageRes.message.content;
+
                 const senderRes = await userService.findUserById(
                   messageRes.message.senderId
                 );
-                conv.senderLastMessage = senderRes.user.hoten;
+
+                if (me.user._id === senderRes.user._id) {
+                  conv.senderLastMessage = "Bạn";
+                } else {
+                  conv.senderLastMessage = senderRes.user.hoten;
+                }
               } catch (error) {
-                conv.lastMessage = `Lỗi + ${error}`;
+                conv.lastMessage = `Lỗi: ${error}`;
               }
             }
+
             if (conv.type === "private") {
               const otherUser = conv.members.find((m) => m._id !== me.user._id);
               if (otherUser) {
@@ -148,14 +181,25 @@ export default function Home() {
             return conv;
           })
         );
-        setConversations(updateDataConvs);
+
+        const sortedConvs = updateDataConvs.sort((a, b) => {
+          const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return timeB - timeA; // mới nhất lên đầu
+        });
+        setConversations(sortedConvs);
+
+        updateDataConvs.forEach((conv) => {
+          socket?.emit("join_room", conv._id);
+        });
+  
       } catch (error) {
         console.error("Lỗi khi load cuộc trò chuyện hoặc user:", error);
       }
     };
 
     fetchConversations();
-  }, []);
+  }, [socket]);  
 
   // Gọi video
   useEffect(() => {
@@ -320,7 +364,7 @@ export default function Home() {
           <div className="w-[30%] border-l bg-white">
             <ChatInfo
               conversation={currentConversation}
-              messages = {messages}
+              messages={messages}
               onClose={() => setShowInfoPanel(false)}
             />
           </div>

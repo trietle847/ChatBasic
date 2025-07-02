@@ -1,6 +1,7 @@
 let io = null;
 const userSocketMap = new Map();
 const messageSchema = require("../models/message.model");
+const conversationSchema = require("../models/conversation.model")
 
 module.exports = {
   init: (server) => {
@@ -39,7 +40,40 @@ module.exports = {
             "senderId",
             "hoten email"
           );
+
+          await conversationSchema.findByIdAndUpdate(
+            data.conversationId,
+            { lastMessage: message._id },
+            { new: true }
+          );
+
           io.to(data.conversationId).emit("receive_message", populateMessage);
+
+          const updatedConversation = await conversationSchema
+            .findById(data.conversationId)
+            .populate("members", "hoten avatar")
+            .lean();
+
+            let convToEmit = {
+              ...updatedConversation,
+              lastMessage: populateMessage.content,
+              senderLastMessage: populateMessage.senderId.hoten,
+              senderLastMessageId: populateMessage.senderId._id, // Thêm dòng này
+            };
+
+          if (updatedConversation.type === "private") {
+            const otherUser = updatedConversation.members.find(
+              (m) => m._id.toString() !== data.senderId
+            );
+            if (otherUser) {
+              convToEmit.otherUser = otherUser.hoten;
+              convToEmit.Avatar = otherUser.avatar;
+            }
+          }
+
+          // Emit conversation_updated
+          io.to(data.conversationId).emit("conversation_updated", convToEmit);
+
         } catch (error) {
           console.error("Lỗi khi lưu tin nhắn:", error);
           socket.emit("error_message", { error: "Gửi tin nhắn thất bại." });
