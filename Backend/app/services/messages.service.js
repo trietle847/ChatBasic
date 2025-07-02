@@ -1,4 +1,5 @@
 const Message = require("../models/message.model")
+const mongoose = require("mongoose");
 
 class MessageService {
   async sendMessage(conversationId, senderId, content) {
@@ -19,7 +20,10 @@ class MessageService {
   }
 
   async getMessagesById(messageId) {
-    return await Message.findById(messageId)
+    console.log(messageId)
+    return await Message.findOne({
+      _id: new mongoose.Types.ObjectId(messageId),
+    });
   }
 }
 
