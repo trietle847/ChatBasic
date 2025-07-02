@@ -17,6 +17,10 @@ const messageService = {
 
     return response.data;
   },
+  getMessageById: async (messageId: string) => {
+    const response = await createAPI.post("/message/get/byId", { messageId });
+    return response.data;
+  },
   sendMessage: async (data: dataMessage) => {
     const response = await createAPI.post("/message/text", data);
 

@@ -39,6 +39,8 @@ interface Conversation {
   members: User[];
   otherUser?: string;
   Avatar: string;
+  lastMessage: string;
+  senderLastMessage: string;
 }
 
 export default function Home() {
@@ -113,6 +115,18 @@ export default function Home() {
 
         const updateDataConvs = await Promise.all(
           dataConvs.map(async (conv: Conversation) => {
+            if (conv.lastMessage) {
+              try {
+                const messageRes = await messageService.getMessageById(conv.lastMessage);
+                conv.lastMessage = messageRes.message.content;
+                const senderRes = await userService.findUserById(
+                  messageRes.message.senderId
+                );
+                conv.senderLastMessage = senderRes.user.hoten;
+              } catch (error) {
+                conv.lastMessage = `Lỗi + ${error}`;
+              }
+            }
             if (conv.type === "private") {
               const otherUser = conv.members.find((m) => m._id !== me.user._id);
               if (otherUser) {
@@ -131,9 +145,6 @@ export default function Home() {
               }
             }
 
-            // if (conv.type === "group") {
-            //   return dataConvs
-            // }
             return conv;
           })
         );
