@@ -17,6 +17,10 @@ class MessageService {
       .sort({ createdAt: 1 })
       .populate("senderId", "hoten email");
   }
+
+  async getMessagesById(messageId) {
+    return await Message.findById(messageId)
+  }
 }
 
 module.exports = new MessageService();

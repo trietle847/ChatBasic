@@ -112,3 +112,15 @@ exports.getMessages = async (req, res, next) => {
     return next(new ApiError(500, `Lỗi khi lấy tin nhắn ${error.message}`))
   }
 };
+
+exports.getMessagesByID = async (req, res, next) => {
+  try {
+    const {messageId} = req.body;
+    const message = await messageService.getMessagesById(messageId);
+    res.send({
+      message
+    })
+  } catch (error) {
+    return next(new ApiError(500, `Lỗi khi lấy tin nhắn ${error.message}`));
+  }
+}

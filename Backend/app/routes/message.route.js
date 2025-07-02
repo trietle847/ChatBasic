@@ -15,4 +15,7 @@ router
 router.route("/get")
   .post(messageController.getMessages);
 
+router.route("/get/byId")
+  .post(messageController.getMessagesByID);
+
 module.exports = router;
