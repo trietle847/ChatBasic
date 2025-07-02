@@ -4,6 +4,7 @@ const conversationService = require("../services/conversation.service");
 const socketUtil = require("../utils/socket.util");
 const supabase = require("../config/supabase");
 const path = require("path");
+const slugify = require("slugify");
 
 exports.sendTextMessage = async (req, res, next) => {
   try {
@@ -43,8 +44,15 @@ exports.sendFileMessage = async (req, res, next) => {
     }
 
     const buffer = req.file.buffer;
-    const ext = path.extname(req.file.originalname);
-    const fileName = `${Date.now()}-${req.file.originalname}`;
+
+    const ext = path.extname(req.file.originalname); 
+    const originalNameWithoutExt = path.basename(req.file.originalname, ext);
+    const safeName = slugify(originalNameWithoutExt, {
+      lower: true,
+      strict: true, 
+    });
+
+    const fileName = `${Date.now()}-${safeName}${ext}`;
 
     const { error } = await supabase.storage
       .from("chatuploads")
