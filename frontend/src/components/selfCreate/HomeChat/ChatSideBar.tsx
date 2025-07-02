@@ -20,6 +20,8 @@ interface Conversation {
   members: User[];
   otherUser?: string;
   Avatar: string;
+  lastMessage: string;
+  senderLastMessage: string;
 }
 
 interface Props {
@@ -36,6 +38,8 @@ export default function ChatSidebar({
   return (
     <div className="w-1/4 bg-white p-4 border-r overflow-y-auto">
       <h2 className="text-xl font-bold mb-4">Chats</h2>
+
+      {/* Search + Add Button */}
       <div className="flex items-center justify-between mb-4 space-x-2">
         <div className="flex items-center flex-1 bg-gray-100 rounded-md px-2">
           <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
@@ -48,27 +52,40 @@ export default function ChatSidebar({
           <FontAwesomeIcon icon={faUserPlus} />
         </Button>
       </div>
-      <div className="space-y-3">
+
+      {/* List of conversations */}
+      <div className="space-y-2">
         {conversations.map((conv) => (
           <Card
             key={conv._id}
             onClick={() => onSelectConversation(conv)}
-            className={`cursor-pointer ${
+            className={`cursor-pointer transition-all ${
               currentConversationId === conv._id
-                ? "border-blue-500 border-2"
-                : ""
+                ? "border-blue-500 border-2 bg-blue-50"
+                : "hover:bg-gray-50"
             }`}
           >
             <CardContent className="flex items-center space-x-3 py-3">
               <Avatar>
                 <AvatarImage src={conv.Avatar} />
                 <AvatarFallback>
-                  {conv.name?.slice(0, 2).toUpperCase()}
+                  {(conv.type === "group" ? conv.name : conv.otherUser)
+                    ?.slice(0, 2)
+                    .toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-medium truncate">
-                {conv.type === "group" ? conv.name : conv.otherUser}
-              </span>
+
+              <div className="flex flex-col min-w-0">
+                <span className="font-medium truncate text-sm text-gray-900">
+                  {conv.type === "group" ? conv.name : conv.otherUser}
+                </span>
+                <span className="text-xs text-gray-600 truncate max-w-[180px]">
+                  {conv.senderLastMessage && (
+                    <strong className="mr-1">{conv.senderLastMessage}:</strong>
+                  )}
+                  {conv.lastMessage}
+                </span>
+              </div>
             </CardContent>
           </Card>
         ))}
