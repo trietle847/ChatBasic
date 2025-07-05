@@ -34,6 +34,7 @@ module.exports = {
             senderId: data.senderId,
             content: data.content,
             type: data.type,
+            readBy: [data.senderId],
           });
 
           const populateMessage = await message.populate(
@@ -77,6 +78,24 @@ module.exports = {
         } catch (error) {
           console.error("Lỗi khi lưu tin nhắn:", error);
           socket.emit("error_message", { error: "Gửi tin nhắn thất bại." });
+        }
+      });
+
+      socket.on("mark_as_read", async ({ conversationId, userId }) => {
+        try {
+          await messageSchema.updateMany(
+            {
+              conversationId,
+              readBy: { $ne: userId },
+            },
+            {
+              $addToSet: { readBy: userId },
+            }
+          );
+          io.to(conversationId).emit("mark_as_read_success", {conversationId,});
+
+        } catch (err) {
+          console.error("Lỗi khi đánh dấu đã đọc:", err);
         }
       });
 

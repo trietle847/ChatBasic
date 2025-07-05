@@ -59,6 +59,7 @@ export default function Home() {
     callerId?: string;
   } | null>(null);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
 
   const socket = useSocket();
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -201,6 +202,26 @@ export default function Home() {
     fetchConversations();
   }, [socket]);
 
+  // lấy tin nhắn chưa đọc
+  useEffect(() => {
+    if (!userId) return;
+    const fetchUnreadMap = async () => {
+      if (!userId) return;
+      try {
+        const res = await messageService.getUnreadMap();
+        const map: Record<string, number> = {};
+        Object.entries(res.data).forEach(([conversationId, unreadCount]) => {
+          map[conversationId] = Number(unreadCount);
+        });
+
+        setUnreadMap(map);
+      } catch (error) {
+        console.error("Không lấy được unreadMap:", error);
+      }
+    };
+    fetchUnreadMap();
+  }, [userId]);
+
   // Gọi video
   useEffect(() => {
     if (!socket || !userId) return;
@@ -232,13 +253,16 @@ export default function Home() {
 
   // Nhận tin nhắn
   useEffect(() => {
-    if (!currentConversation || !socket) return;
+    if (!socket) return;
     socket.on("receive_message", (message: Message) => {
       if (
         !currentConversation ||
         message.conversationId !== currentConversation._id
       ) {
-        // Nếu message không thuộc conversation đang mở → bỏ qua (hoặc chỉ cập nhật badge)
+        setUnreadMap((prev) => ({
+          ...prev,
+          [message.conversationId]: (prev[message.conversationId] || 0) + 1,
+        }));
         return;
       }
       setMessages((prev) => [...prev, message]);
@@ -252,7 +276,7 @@ export default function Home() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
+  
   const loadMessages = (conversation: Conversation) => {
     if (!socket) return;
     const idcon: ListMessage = { conversationId: conversation._id };
@@ -287,7 +311,41 @@ export default function Home() {
     setMessages([]);
     loadMessages(conv);
     setShowInfoPanel(false); // Reset panel khi đổi cuộc trò chuyện
+
+    // Reset số chưa đọc
+    // setUnreadMap((prev) => ({
+    //   ...prev,
+    //   [conv._id]: 0,
+    // }));
+
+    // Emit mark as read
+    socket?.emit("mark_as_read", {
+      conversationId: conv._id,
+      userId,
+    });
   };
+
+  // Lắng nghe sự kiện mark as read thành công từ server
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMarkAsRead = ({
+      conversationId,
+    }: {
+      conversationId: string;
+    }) => {
+      setUnreadMap((prev) => ({
+        ...prev,
+        [conversationId]: 0,
+      }));
+    };
+
+    socket.on("mark_as_read_success", handleMarkAsRead);
+
+    return () => {
+      socket.off("mark_as_read_success", handleMarkAsRead);
+    };
+  }, [socket]);
 
   const handleFileSend = async (file: File) => {
     if (!file || !userId || !currentConversation) return;
@@ -336,7 +394,9 @@ export default function Home() {
         conversations={conversations}
         currentConversationId={currentConversation?._id || null}
         onSelectConversation={handleSelectConversation}
+        unreadMap={unreadMap}
       />
+
       <div className="flex flex-1">
         {/* Phần trò chuyện (70% khi panel mở) */}
         <div

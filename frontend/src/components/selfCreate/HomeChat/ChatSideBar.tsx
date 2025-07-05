@@ -29,12 +29,14 @@ interface Props {
   conversations: Conversation[];
   currentConversationId: string | null;
   onSelectConversation: (conv: Conversation) => void;
+  unreadMap: Record<string, number>;
 }
 
 export default function ChatSidebar({
   conversations,
   currentConversationId,
   onSelectConversation,
+  unreadMap,
 }: Props) {
   return (
     <div className="w-1/4 bg-white p-4 border-r overflow-y-auto">
@@ -77,14 +79,20 @@ export default function ChatSidebar({
               </Avatar>
 
               <div className="flex flex-col min-w-0">
-                <span className="font-medium truncate text-sm text-gray-900">
-                  {conv.type === "group" ? conv.name : conv.otherUser}
-                </span>
+                <div className="flex justify-between items-center w-full">
+                  <span className="font-medium truncate text-sm text-gray-900">
+                    {conv.type === "group" ? conv.name : conv.otherUser}
+                  </span>
+                  {unreadMap[conv._id] > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                      {unreadMap[conv._id]}
+                    </span>
+                  )}
+                </div>
+
                 <span className="text-xs text-gray-600 truncate max-w-[180px]">
                   {conv.senderLastMessage && (
-                    <strong className="mr-1">
-                      {conv.senderLastMessage}:
-                    </strong>
+                    <strong className="mr-1">{conv.senderLastMessage}:</strong>
                   )}
                   {conv.lastMessage}
                 </span>
