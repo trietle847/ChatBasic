@@ -32,6 +32,10 @@ const messageService = {
     });
     return response.data;
   },
+  getUnreadMap: async () => {
+    const response = await createAPI.get("/message/get/unread");
+    return response.data;
+  }
 };
 
 export default messageService;

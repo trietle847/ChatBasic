@@ -18,6 +18,7 @@ import messageService, {
 
 interface Message {
   _id: string;
+  conversationId: string;
   senderId: { _id: string; hoten?: string; email?: string } | string;
   content: string;
   file?: string;
@@ -46,7 +47,8 @@ interface Conversation {
 
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const [currentConversation, setCurrentConversation] =
+    useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
@@ -125,8 +127,7 @@ export default function Home() {
       socket.off("conversation_removed", handleRemove);
     };
   }, [socket, userId, currentConversation]);
-  
-  
+
   // Load conversation
   useEffect(() => {
     const fetchConversations = async () => {
@@ -192,14 +193,13 @@ export default function Home() {
         updateDataConvs.forEach((conv) => {
           socket?.emit("join_room", conv._id);
         });
-  
       } catch (error) {
         console.error("Lỗi khi load cuộc trò chuyện hoặc user:", error);
       }
     };
 
     fetchConversations();
-  }, [socket]);  
+  }, [socket]);
 
   // Gọi video
   useEffect(() => {
@@ -234,6 +234,13 @@ export default function Home() {
   useEffect(() => {
     if (!currentConversation || !socket) return;
     socket.on("receive_message", (message: Message) => {
+      if (
+        !currentConversation ||
+        message.conversationId !== currentConversation._id
+      ) {
+        // Nếu message không thuộc conversation đang mở → bỏ qua (hoặc chỉ cập nhật badge)
+        return;
+      }
       setMessages((prev) => [...prev, message]);
     });
     return () => {
