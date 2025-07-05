@@ -25,7 +25,24 @@ class MessageService {
     const result = await Message.aggregate([
       {
         $match: {
+          senderId: { $ne: new mongoose.Types.ObjectId(userId) },
           readBy: { $ne: new mongoose.Types.ObjectId(userId) },
+        },
+      },
+      {
+        $lookup: {
+          from: "conversations",
+          localField: "conversationId",
+          foreignField: "_id",
+          as: "conversation",
+        },
+      },
+      {
+        $unwind: "$conversation",
+      },
+      {
+        $match: {
+          "conversation.members": new mongoose.Types.ObjectId(userId),
         },
       },
       {
@@ -35,6 +52,7 @@ class MessageService {
         },
       },
     ]);
+    
 
     const unreadMap = {};
     result.forEach((item) => {

@@ -127,7 +127,7 @@ exports.getMessagesByID = async (req, res, next) => {
 
 exports.getUnreadMap = async (req, res, next) => {
   try {
-    const {userId} = req.user.userId;
+    const userId = req.user.userId;
     const data = await messageService.getUnreadMap(userId);
     return res.send({
       data
