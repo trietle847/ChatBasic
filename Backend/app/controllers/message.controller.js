@@ -124,3 +124,15 @@ exports.getMessagesByID = async (req, res, next) => {
     return next(new ApiError(500, `Lỗi khi lấy tin nhắn ${error.message}`));
   }
 }
+
+exports.getUnreadMap = async (req, res, next) => {
+  try {
+    const {userId} = req.user.userId;
+    const data = await messageService.getUnreadMap(userId);
+    return res.send({
+      data
+    })
+  } catch (error) {
+    return next(new ApiError(500, `Lỗi khi lấy tin nhắn chưa đọc ${error.message}`));
+  }
+}

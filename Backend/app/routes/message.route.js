@@ -18,4 +18,7 @@ router.route("/get")
 router.route("/get/byId")
   .post(messageController.getMessagesByID);
 
+router.route("/get/unread").
+  get(authMiddleware,messageController.getUnreadMap);
+
 module.exports = router;
