@@ -1,3 +1,5 @@
+import { FileText } from "lucide-react"; 
+
 interface Message {
   _id: string;
   senderId: { _id: string; hoten?: string; email?: string } | string;
@@ -50,14 +52,20 @@ export default function MessageItem({ msg, userId }: Props) {
               Trình duyệt không hỗ trợ video
             </video>
           ) : msg.type === "file" ? (
-            <a
-              href={msg.file}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-blue-200"
-            >
-              📎 {msg.content}
-            </a>
+            <div className="flex flex-col items-start">
+              <a
+                href={msg.file}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline hover:text-blue-800 font-medium flex items-center space-x-1"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Tải file</span>
+              </a>
+              <span className="text-sm mt-1 text-gray-700 truncate max-w-[180px]">
+                {msg.content}
+              </span>
+            </div>
           ) : (
             <em>[Unsupported]</em>
           )}

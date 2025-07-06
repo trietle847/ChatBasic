@@ -38,7 +38,11 @@ export default function ConversationInfo({ conversation, messages }: Props) {
   const [showAdd, setShowAdd] = useState(false);
   const [showMember, setShowMember] = useState(false);
   const [conver, setConversation] = useState<Conversation>();
-  const currentConversation = conver || conversation // lấy giá trị ban đầu hoặc mới cập nhật
+  const currentConversation = conver || conversation ;
+  const [activeTab, setActiveTab] = useState<"image" | "video" | "file">(
+    "image"
+  );
+
   if (showMember) {
     return (
       <GroupMemberList 
@@ -84,23 +88,51 @@ export default function ConversationInfo({ conversation, messages }: Props) {
         <Button onClick={() => setShowMember(true)}>Xem thành viên</Button>
       </div>
       <div className="mt-4">
-        <h3 className="font-semibold mb-2">Ảnh/Video</h3>
+        <h3 className="font-semibold mb-2">Ảnh / Video / Tệp</h3>
+
+        {/* Tabs */}
+        <div className="flex space-x-2 mb-2">
+          {(["image", "video", "file"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-1 rounded-full text-sm font-medium ${
+                activeTab === tab
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {tab === "image" ? "Ảnh" : tab === "video" ? "Video" : "Tệp"}
+            </button>
+          ))}
+        </div>
+
+        {/* Nội dung tab */}
         <div className="grid grid-cols-3 gap-2">
           {messages
-            .filter((m) => m.type === "image" || m.type === "video")
+            .filter((m) => m.type === activeTab)
             .map((m) => (
               <div key={m._id}>
-                {m.type === "image" ? (
+                {activeTab === "image" ? (
                   <img
                     src={m.file}
                     alt="img"
                     className="w-full h-24 object-cover rounded"
                   />
-                ) : (
+                ) : activeTab === "video" ? (
                   <video controls className="w-full h-24 object-cover rounded">
                     <source src={m.file} type="video/mp4" />
                     Trình duyệt không hỗ trợ video.
                   </video>
+                ) : (
+                  <a
+                    href={m.file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline text-sm break-words block"
+                  >
+                    📎 {m.content}
+                  </a>
                 )}
               </div>
             ))}

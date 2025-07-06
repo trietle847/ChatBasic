@@ -5,6 +5,7 @@ const socketUtil = require("../utils/socket.util");
 const supabase = require("../config/supabase");
 const path = require("path");
 const slugify = require("slugify");
+const { Buffer } = require("buffer");
 
 exports.sendTextMessage = async (req, res, next) => {
   try {
@@ -45,15 +46,22 @@ exports.sendFileMessage = async (req, res, next) => {
 
     const buffer = req.file.buffer;
 
-    const ext = path.extname(req.file.originalname); 
-    const originalNameWithoutExt = path.basename(req.file.originalname, ext);
+    // 👇 FIX lỗi tên file bị sai font từ frontend
+    const ext = path.extname(req.file.originalname);
+    const decodedName = Buffer.from(req.file.originalname, "latin1").toString(
+      "utf8"
+    );
+    const originalNameWithoutExt = path.basename(decodedName, ext);
+
     const safeName = slugify(originalNameWithoutExt, {
       lower: true,
-      strict: true, 
+      strict: true,
     });
 
     const fileName = `${Date.now()}-${safeName}${ext}`;
+    console.log("Tên file gốc:", decodedName);
 
+    // ✅ Upload file
     const { error } = await supabase.storage
       .from("chatuploads")
       .upload(fileName, buffer, {
@@ -68,8 +76,9 @@ exports.sendFileMessage = async (req, res, next) => {
       .getPublicUrl(fileName);
 
     const fileUrl = publicUrl.publicUrl;
-    const content = req.file.originalname;
+    const content = decodedName; // ✅ dùng tên đúng font
 
+    // ✅ Xác định loại file
     let type = "file";
     if (req.file.mimetype.startsWith("image/")) {
       type = "image";
@@ -77,6 +86,7 @@ exports.sendFileMessage = async (req, res, next) => {
       type = "video";
     }
 
+    // ✅ Gửi message
     const Message = await messageService.sendMessage({
       conversationId,
       senderId,

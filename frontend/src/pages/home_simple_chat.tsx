@@ -352,8 +352,8 @@ export default function Home() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("conversationId", currentConversation._id);
-    formData.append("senderId", userId);
-    formData.append("type", "file");
+    // formData.append("senderId", userId);
+    // formData.append("type", "file");
     try {
       const res = await messageService.uploadFile(formData);
       socket?.emit("send_message", res.message);
