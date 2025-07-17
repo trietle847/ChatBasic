@@ -4,6 +4,9 @@ import ChatMessages from "@/components/selfCreate/HomeChat/ChatMessage";
 import ChatInput from "@/components/selfCreate/HomeChat/ChatInput";
 import Sidebar from "@/components/selfCreate/sidebar";
 import ChatInfo from "@/components/selfCreate/ChatInfo";
+import { useAgora } from "@/context/AgoraContext";
+import AddFriendModal from "@/components/selfCreate/FindvsAddFriend";
+import CreateGroupModal from "@/components/selfCreate/CreateGroup";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket } from "@/socket/socketContex";
@@ -22,7 +25,7 @@ interface Message {
   senderId: { _id: string; hoten?: string; email?: string } | string;
   content: string;
   file?: string;
-  type: "text" | "file" | "image" | "video" | "system";
+  type: "text" | "file" | "image" | "video" | "call";
 }
 
 interface User {
@@ -57,12 +60,26 @@ export default function Home() {
     incoming?: boolean;
     conversationId?: string;
     callerId?: string;
+    callType: string;
   } | null>(null);
+
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isCreateGroupOpen, setCreateGroupOpen] = useState(false);
 
   const socket = useSocket();
+  const { leaveChannel, localAudioTrack, localVideoTrack } = useAgora();
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  // tải lại sau reload
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    if (socket && storedUserId) {
+      socket.emit("register_user", storedUserId);
+      // console.log("[Client] register_user lại sau reload:", storedUserId);
+    }
+  }, [socket]);
 
   //update conversation
   useEffect(() => {
@@ -76,9 +93,23 @@ export default function Home() {
           ? "Bạn"
           : updated.senderLastMessage;
 
+      let Avatar = "";
+      let otherUser = "";
+
+      if (updated.type === "private") {
+        const user = updated.members.find((m) => m._id !== userId);
+        Avatar = user?.avatar || "";
+        otherUser = user?.hoten || "";
+      } else if (updated.type === "group") {
+        Avatar = updated.Avatar;
+        otherUser = updated.name;
+      }
+
       const updatedWithLabel: Conversation = {
         ...updated,
         senderLastMessage: senderName,
+        Avatar,
+        otherUser,
       };
 
       setConversations((prev) => {
@@ -179,7 +210,6 @@ export default function Home() {
                 }
               }
             }
-
             return conv;
           })
         );
@@ -222,35 +252,6 @@ export default function Home() {
     fetchUnreadMap();
   }, [userId]);
 
-  // Gọi video
-  useEffect(() => {
-    if (!socket || !userId) return;
-
-    socket.on("receive_call_request", ({ channel, conversationId, from }) => {
-      setCallInfo({ channel, incoming: true, conversationId, callerId: from });
-    });
-
-    socket.on(
-      "call_response_result",
-      ({ accepted, channel, conversationId }) => {
-        if (accepted) {
-          setCallInfo({ channel, incoming: false, conversationId });
-        } else {
-          alert("Cuộc gọi đã bị từ chối!");
-          socket.emit("send_system_message", {
-            conversationId,
-            content: "Cuộc gọi đã bị từ chối.",
-          });
-        }
-      }
-    );
-
-    return () => {
-      socket.off("receive_call_request");
-      socket.off("call_response_result");
-    };
-  }, [socket, userId]);
-
   // Nhận tin nhắn
   useEffect(() => {
     if (!socket) return;
@@ -272,11 +273,63 @@ export default function Home() {
     };
   }, [currentConversation, socket]);
 
+  // Gọi video
+  useEffect(() => {
+    if (!socket || !userId) return;
+
+    socket.on("receive_call_request", ({ channel, conversationId, from }) => {
+      setCallInfo({
+        channel,
+        incoming: true,
+        conversationId,
+        callerId: from,
+        callType: "private",
+      });
+    });
+
+    socket.on("receive_group_call", ({ channel, conversationId, from }) => {
+      setCallInfo({
+        channel,
+        incoming: true,
+        conversationId,
+        callerId: from,
+        callType: "group",
+      });
+    });
+
+    socket.on(
+      "call_response_result",
+      async ({ accepted, channel, conversationId }) => {
+        if (accepted) {
+          setCallInfo((prev) => ({
+            ...prev,
+            channel,
+            incoming: false,
+            conversationId,
+            callType: "",
+          }));
+        } else {
+          alert("Cuộc gọi đã bị từ chối!");
+          await leaveChannel();
+          localVideoTrack?.close();
+          localAudioTrack?.close();
+          setCallInfo(null);
+        }
+      }
+    );
+
+    return () => {
+      socket.off("receive_call_request");
+      socket.off("call_response_result");
+      socket.off("receive_group_call");
+    };
+  }, [socket, userId]);
+
   // Auto scroll khi có tin mới
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-  
+
   const loadMessages = (conversation: Conversation) => {
     if (!socket) return;
     const idcon: ListMessage = { conversationId: conversation._id };
@@ -364,28 +417,84 @@ export default function Home() {
 
   const handleCall = () => {
     if (!currentConversation || !userId) return;
-    const otherUser = currentConversation.members.find((m) => m._id !== userId);
-    const channel = `call-${Date.now()}`;
-    socket?.emit("call_request", {
-      to: otherUser?._id,
-      from: userId,
+
+    const channel = `group-call-${Date.now()}`;
+    const isGroup = currentConversation.type === "group";
+    const membersToCall = currentConversation.members
+      .filter((m) => m._id !== userId)
+      .map((m) => m._id);
+
+    if (isGroup) {
+      socket?.emit("group_call_request", {
+        from: userId,
+        to: membersToCall,
+        channel,
+        conversationId: currentConversation._id,
+      });
+    } else {
+      const otherUser = currentConversation.members.find(
+        (m) => m._id !== userId
+      );
+      if (!otherUser) return;
+      socket?.emit("call_request", {
+        from: userId,
+        to: otherUser._id,
+        channel,
+        conversationId: currentConversation._id,
+      });
+    }
+
+    console.log("✅ Setting callInfo with callerId:", userId);
+
+    setCallInfo({
       channel,
+      incoming: false,
       conversationId: currentConversation._id,
+      callerId: userId,
+      callType: isGroup ? "group" : "private",
     });
   };
 
-  const handleCallResponse = (accept: boolean) => {
-    if (!callInfo || !callInfo.callerId || !callInfo.conversationId) return;
-    socket?.emit("call_response", {
-      to: callInfo.callerId,
-      accepted: accept,
-      channel: callInfo.channel,
-      conversationId: callInfo.conversationId,
-    });
-    if (!accept) {
+  // const handleCallResponse = (accept: boolean) => {
+  //   if (!callInfo || !callInfo.callerId || !callInfo.conversationId) return;
+  //   socket?.emit("call_response", {
+  //     to: callInfo.callerId,
+  //     accepted: accept,
+  //     channel: callInfo.channel,
+  //     conversationId: callInfo.conversationId,
+  //     senderId: userId
+  //   });
+  //   if (!accept) {
+  //     setCallInfo(null);
+  //   }
+  // };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleForceEndCall = async () => {
       setCallInfo(null);
-    }
-  };
+      await leaveChannel();
+
+      if (localAudioTrack) {
+        localAudioTrack.stop();
+        localAudioTrack.close();
+      }
+
+      if (localVideoTrack) {
+        localVideoTrack.stop();
+        localVideoTrack.close();
+      }
+
+      setCallInfo(null);
+    };
+
+    socket.on("call_force_ended", handleForceEndCall);
+
+    return () => {
+      socket.off("call_force_ended", handleForceEndCall);
+    };
+  }, [socket, leaveChannel, localAudioTrack, localVideoTrack]);
 
   return (
     <div className="flex h-screen w-screen bg-gray-100">
@@ -395,6 +504,8 @@ export default function Home() {
         currentConversationId={currentConversation?._id || null}
         onSelectConversation={handleSelectConversation}
         unreadMap={unreadMap}
+        onOpenAddFriend={() => setModalOpen(true)}
+        onOpenCreateGroup={() => setCreateGroupOpen(true)}
       />
 
       <div className="flex flex-1">
@@ -438,15 +549,27 @@ export default function Home() {
         )}
       </div>
 
-      {callInfo && (
+      {callInfo && userId && (
         <CallOverlay
           channel={callInfo.channel}
           incoming={callInfo.incoming}
           onClose={() => setCallInfo(null)}
-          onAccept={() => handleCallResponse(true)}
-          onReject={() => handleCallResponse(false)}
           conversationId={callInfo.conversationId}
           callerId={callInfo.callerId}
+          senderId={userId}
+          callType={callInfo.callType}
+        />
+      )}
+      {isModalOpen && (
+        <AddFriendModal
+          open={isModalOpen}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+      {isCreateGroupOpen && (
+        <CreateGroupModal
+          open={isCreateGroupOpen}
+          onClose={() => setCreateGroupOpen(false)}
         />
       )}
     </div>

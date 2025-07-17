@@ -1,11 +1,12 @@
-import { FileText } from "lucide-react"; 
+import { FileText, Video } from "lucide-react";
 
 interface Message {
   _id: string;
   senderId: { _id: string; hoten?: string; email?: string } | string;
   content: string;
   file?: string;
-  type: "text" | "file" | "image" | "video" | "system";
+  type: "text" | "file" | "image" | "video" | "call";
+  createdAt?: string;
 }
 
 interface Props {
@@ -17,6 +18,39 @@ export default function MessageItem({ msg, userId }: Props) {
   const sender =
     typeof msg.senderId === "string" ? msg.senderId : msg.senderId._id;
   const isMe = sender === userId;
+
+  const renderCallMessage = () => {
+    const dateStr = msg.createdAt
+      ? new Date(msg.createdAt).toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "Không rõ ngày";
+
+    let title = "";
+    switch (msg.content) {
+      case "call-ended":
+        title = "Cuộc gọi video đã kết thúc";
+        break;
+      case "call-ended-rejected":
+        title = "Cuộc gọi bị nhỡ";
+        break;
+      case "call-declined":
+        title = "Cuộc gọi đã bị từ chối";
+        break;
+      default:
+        title = msg.content;
+    }
+
+    return (
+      <div className="flex items-center gap-2 text-gray-700">
+        <Video className="w-4 h-4" />
+        <span>{title}</span>
+        <span className="text-xs text-gray-500 ml-2">{dateStr}</span>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -66,6 +100,8 @@ export default function MessageItem({ msg, userId }: Props) {
                 {msg.content}
               </span>
             </div>
+          ) : msg.type === "call" ? (
+            renderCallMessage()
           ) : (
             <em>[Unsupported]</em>
           )}

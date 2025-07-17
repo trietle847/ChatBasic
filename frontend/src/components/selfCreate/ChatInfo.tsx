@@ -15,7 +15,7 @@ interface Message {
   senderId: string | { _id: string; hoten?: string };
   content: string;
   file?: string;
-  type: "text" | "file" | "image" | "video" | "system";
+  type: "text" | "file" | "image" | "video" | "call";
 }
 
 interface Conversation {
@@ -39,7 +39,7 @@ export default function ConversationInfo({ conversation, messages }: Props) {
   const [showMember, setShowMember] = useState(false);
   const [conver, setConversation] = useState<Conversation>();
   const currentConversation = conver || conversation ;
-  const [activeTab, setActiveTab] = useState<"image" | "video" | "file">(
+  const [activeTab, setActiveTab] = useState<"image" | "video" | "file" | "call">(
     "image"
   );
 

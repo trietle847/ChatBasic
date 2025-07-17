@@ -28,10 +28,10 @@ export default function LoginForm() {
       const res = await userService.login(loginData);
 
       const userId = res.user._id;
-      // console.log("x", userId);
+      localStorage.setItem("userId", userId);
       socket?.emit("register_user", userId);
 
-      alert("Đăng nhập thành công");
+      // alert("Đăng nhập thành công");
       navigate("/");
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

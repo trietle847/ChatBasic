@@ -1,5 +1,9 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPhone, faVideo, faGear, faPen } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPhone,
+  faGear,
+  faPen,
+} from "@fortawesome/free-solid-svg-icons";
 import ChatInfo from "@/components/selfCreate/ChatInfo";
 import { useState } from "react";
 
@@ -11,7 +15,7 @@ interface User {
   _id: string;
   tendangnhap: string;
   avatar: string;
-  hoten:string;
+  hoten: string;
 }
 
 interface Message {
@@ -19,7 +23,7 @@ interface Message {
   senderId: string | { _id: string; hoten?: string };
   content: string;
   file?: string;
-  type: "text" | "file" | "image" | "video" | "system";
+  type: "text" | "file" | "image" | "video" | "call";
 }
 
 interface Conversation {
@@ -34,13 +38,19 @@ interface Conversation {
 
 interface Props {
   conversation: Conversation | null;
-  messages: Message[]
+  messages: Message[];
   userId: string | null;
   onCall: (channel: string, members: string[]) => void;
-  onOpenInfo: () => void; 
+  onOpenInfo: () => void;
 }
 
-export default function ChatHeader({ conversation, messages ,userId, onCall, onOpenInfo }: Props) {
+export default function ChatHeader({
+  conversation,
+  messages,
+  userId,
+  onCall,
+  onOpenInfo,
+}: Props) {
   const [showInfo, setShowInfo] = useState(false);
   const [isEditing, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState("");
@@ -51,16 +61,16 @@ export default function ChatHeader({ conversation, messages ,userId, onCall, onO
       const renameData = {
         name: name,
         conversationId: conversation._id,
-      }
+      };
       const result = await ConversationService.renameConversation(renameData);
       conversation.name = name;
-      console.log(result)
+      console.log(result);
       setIsEditingName(false);
     } catch (error) {
       console.log(error);
     }
-  }
-  
+  };
+
   if (!conversation) return null;
 
   return (
@@ -101,9 +111,7 @@ export default function ChatHeader({ conversation, messages ,userId, onCall, onO
           >
             <FontAwesomeIcon icon={faPhone} />
           </button>
-          <button className="text-gray-600 hover:text-blue-600 transition">
-            <FontAwesomeIcon icon={faVideo} />
-          </button>
+
           <button
             className="text-gray-600 hover:text-blue-600 transition"
             onClick={onOpenInfo}

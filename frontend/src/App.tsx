@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import LoginPage from "@/pages/login";
 import RegisterForm from "./pages/register";
-import HomePage from "./pages/home_simple_chat";
+import HomePage from "./pages/home";
 import ListFriendPage from "./pages/friend/FriendPage";
 import Profile from "./pages/profile";
 import { AgoraProvider } from "@/context/AgoraContext";

@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUserPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faUserPlus, faUsers, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 interface User {
   _id: string;
@@ -30,6 +30,9 @@ interface Props {
   currentConversationId: string | null;
   onSelectConversation: (conv: Conversation) => void;
   unreadMap: Record<string, number>;
+
+  onOpenAddFriend: () => void;
+  onOpenCreateGroup: () => void;
 }
 
 export default function ChatSidebar({
@@ -37,6 +40,8 @@ export default function ChatSidebar({
   currentConversationId,
   onSelectConversation,
   unreadMap,
+  onOpenAddFriend,
+  onOpenCreateGroup
 }: Props) {
   return (
     <div className="w-1/4 bg-white p-4 border-r overflow-y-auto">
@@ -51,8 +56,21 @@ export default function ChatSidebar({
             className="border-none shadow-none bg-transparent ml-2"
           />
         </div>
-        <Button variant="ghost" size="icon">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-blue-600 hover:bg-blue-100"
+          onClick={onOpenAddFriend}
+        >
           <FontAwesomeIcon icon={faUserPlus} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-blue-600 hover:bg-blue-100"
+          onClick={onOpenCreateGroup}
+        >
+          <FontAwesomeIcon icon={faUsers} />
         </Button>
       </div>
 
