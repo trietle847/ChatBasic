@@ -47,6 +47,7 @@ async function startServer() {
 
     server.listen(PORT, () => {
       console.log(`server is running on port ${PORT}`);
+    console.log(`db uri: ${process.env.MONGODB_URI}`);
     });
   } catch (error) {
     console.log("Cannot connect to the database", error);
