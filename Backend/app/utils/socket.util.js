@@ -8,7 +8,7 @@ module.exports = {
     const { Server } = require("socket.io");
     io = new Server(server, {
       cors: {
-        origin: "http://localhost:5173",
+        origin: "https://chatbasic-backend.onrender.com", //"http://localhost:5173",
         methods: ["GET", "POST"],
       },
     });
@@ -61,7 +61,7 @@ module.exports = {
             ...updatedConversation,
             lastMessage: populateMessage.content,
             senderLastMessage: populateMessage.senderId.hoten,
-            senderLastMessageId: populateMessage.senderId._id, 
+            senderLastMessageId: populateMessage.senderId._id,
           };
 
           if (updatedConversation.type === "private") {
@@ -72,9 +72,8 @@ module.exports = {
               convToEmit.otherUser = otherUser.hoten;
               convToEmit.Avatar = otherUser.avatar;
             }
-          }
-          else if (updatedConversation.type === "group") {
-            convToEmit.Avatar = updatedConversation.Avatar
+          } else if (updatedConversation.type === "group") {
+            convToEmit.Avatar = updatedConversation.Avatar;
             convToEmit.otherUser = updatedConversation.name || "Nhóm";
           }
 
@@ -152,7 +151,9 @@ module.exports = {
         });
       });
 
-      socket.on("call_request",({ to, from, channel, conversationId, callerName }) => {
+      socket.on(
+        "call_request",
+        ({ to, from, channel, conversationId, callerName }) => {
           const targetSocketId = userSocketMap.get(to);
           if (targetSocketId) {
             io.to(targetSocketId).emit("receive_call_request", {
@@ -166,7 +167,9 @@ module.exports = {
         }
       );
 
-      socket.on("call_response", async ({ to, accepted, channel, conversationId, senderId }) => {
+      socket.on(
+        "call_response",
+        async ({ to, accepted, channel, conversationId, senderId }) => {
           const targetSocketId = userSocketMap.get(to);
           if (targetSocketId) {
             io.to(targetSocketId).emit("call_response_result", {
@@ -268,7 +271,9 @@ module.exports = {
         }
       });
 
-      socket.on("group_call_request",({ from, to, channel, conversationId }) => {
+      socket.on(
+        "group_call_request",
+        ({ from, to, channel, conversationId }) => {
           to.forEach((userId) => {
             const targetSocketId = userSocketMap.get(userId);
             if (targetSocketId) {
