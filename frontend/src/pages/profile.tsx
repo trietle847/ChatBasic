@@ -1,22 +1,19 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import userService from "@/services/user.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/selfCreate/sidebar";
 import { Upload } from "lucide-react";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPen
-} from "@fortawesome/free-solid-svg-icons";
-
+import { faPen } from "@fortawesome/free-solid-svg-icons";
 
 interface User {
   _id: string;
   hoten: string;
   email: string;
-  sdt:string;
+  sdt: string;
   tendangnhap: string;
   avatar: string;
 }
@@ -27,6 +24,7 @@ const Profile = () => {
   const [editValue, setEditValue] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -84,8 +82,11 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <p className="text-gray-500">Đang tải thông tin người dùng...</p>
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 space-y-4">
+        <p className="text-gray-500">
+          Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.
+        </p>
+        <Button onClick={() => navigate("/login")}>Đến trang đăng nhập</Button>
       </div>
     );
   }
@@ -192,6 +193,7 @@ const Profile = () => {
                 )}
               </div>
 
+              {/* Số điện thoại */}
               <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <label className="text-sm font-medium">Số điện thoại</label>
